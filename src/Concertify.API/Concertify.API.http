@@ -1,0 +1,6 @@
+@Concertify.API_HostAddress = http://localhost:5213
+
+GET {{Concertify.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
