@@ -8,6 +8,7 @@ using Concertify.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 using Microsoft.OpenApi.Models;
+using DotNetEnv;
 
 
 namespace Concertify.API
@@ -18,14 +19,16 @@ namespace Concertify.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            Env.Load();
+            builder.Configuration.AddEnvironmentVariables();
 
             // Add services to the container.
             DependencyInjectionConfiguration.RegisterServices(builder.Services);
 
-            string connectionString = builder.Configuration.GetConnectionString("SqlServerDatabase");
+            string connectionString = builder.Configuration["ConnectionStrings:DefaultConnection"];
 
             builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
-                options.UseSqlServer(connectionString));
+                options.UseNpgsql(connectionString));
 
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -106,9 +109,9 @@ namespace Concertify.API
             using (var serviceScope = app.Services.CreateScope())
             {
                 var dbContext = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                //dbContext.Database.EnsureDeleted();
-                //dbContext.Database.Migrate();
-            }   
+                dbContext.Database.EnsureCreated();
+                dbContext.Database.Migrate();
+            }
 
             app.UseHttpsRedirection();
 
