@@ -12,13 +12,10 @@ namespace Concertify.Infrastructure.Data
     {
         public ApplicationDbContext CreateDbContext(string[] args)
         {
-            string connectionString = "Server=(localdb)\\mssqllocaldb;Database=ProductCatalogue;Integrated Security=True;";
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-
-            optionsBuilder.UseSqlServer(connectionString)
-                .EnableSensitiveDataLogging();
-
+            
             return new ApplicationDbContext(optionsBuilder.Options);
+            
         }
     }
 }
