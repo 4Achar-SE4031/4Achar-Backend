@@ -21,7 +21,7 @@ services:
             dockerfile: ./Dockerfile
         container_name: concertify_backend
         ports:
-            - "5213:80"
+            - "5000:80"
             - 443
         environment:
             - ASPNETCORE_ENVIRONMENT=Development
