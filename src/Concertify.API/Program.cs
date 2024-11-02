@@ -17,7 +17,23 @@ namespace Concertify.API
     {
         public static void Main(string[] args)
         {
+
+            var MyAllowSpecificOrigins = "_myAllowSpecificOrigin";
+
             var builder = WebApplication.CreateBuilder(args);
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy(name: MyAllowSpecificOrigins,
+                                  policy =>
+                                  {
+                                      policy.WithOrigins("http://localhost:3000",
+                                                          "http://localhost:3001")
+                                      .AllowAnyHeader()
+                                      .AllowAnyHeader();
+                                  });
+            });
+
 
             Env.Load();
             builder.Configuration.AddEnvironmentVariables();
@@ -114,6 +130,8 @@ namespace Concertify.API
             }
 
             app.UseHttpsRedirection();
+
+            app.UseCors(MyAllowSpecificOrigins);
 
             app.UseAuthorization();
             app.UseAuthentication();
