@@ -1,8 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-
+﻿using Concertify.Application.Services;
 using Concertify.Domain.Interfaces;
 using Concertify.Infrastructure.ExternalServices;
-using Concertify.Application.Services;
+
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 
 namespace Concertify.Application;
@@ -14,6 +15,7 @@ public class DependencyInjectionConfiguration
         services.AddAutoMapper(typeof(DtoEntityMapperProfile));
 
         services.AddScoped<IAccountService, AccountService>();
+        services.AddScoped<IEmailSender, EmailSender>();
     }
         
 }
