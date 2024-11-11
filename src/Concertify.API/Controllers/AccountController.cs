@@ -49,8 +49,28 @@ public class AccountController : ControllerBase
     [Route("signup")]
     public async Task<IActionResult> Register(UserRegisterDto registerDto)
     {
-        await _accountService.RegisterUser(registerDto);
+        UserInfoDto userInfo = await _accountService.RegisterUser(registerDto);
 
-        return Ok();
+        return Ok(userInfo);
+    }
+
+    [HttpPost]
+    [Route("confirm_email")]
+    public async Task<IActionResult> ConfirmEmail([FromQuery] string email, [FromQuery] string confirmationToken)
+    {
+        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(confirmationToken))
+        {
+            return BadRequest(new
+            {
+                detail = "Either email address or activation token is not valid."
+            });
+        }
+
+        await _accountService.ConfirmEmail(email, confirmationToken);
+
+        return Ok(new
+        {
+            detail = "Your email was confirmed successfully!"
+        });
     }
 }
