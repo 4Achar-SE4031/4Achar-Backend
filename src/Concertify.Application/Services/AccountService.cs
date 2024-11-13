@@ -10,6 +10,7 @@ using Concertify.Domain.Models;
 
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace Concertify.Application.Services;
 
@@ -26,7 +27,7 @@ public class AccountService : IAccountService
         _emailSender = emailSender;
     }
 
-    public async Task<List<Claim>> GetToken(UserLoginDto loginDto)
+    public async Task<List<Claim>> GetTokenAsync(UserLoginDto loginDto)
     {
         var user = await _userManager.FindByNameAsync(loginDto.UserName)
             ?? throw new Exception("User not found!");
@@ -50,7 +51,7 @@ public class AccountService : IAccountService
     }
 
 
-    public async Task<UserInfoDto> RegisterUser(UserRegisterDto registerDto)
+    public async Task<UserInfoDto> RegisterUserAsync(UserRegisterDto registerDto)
     {
         ApplicationUser newUser = _mapper.Map<ApplicationUser>(registerDto);
 
@@ -69,7 +70,7 @@ public class AccountService : IAccountService
         return userInfo;
     }
 
-    public async Task ConfirmEmail(string email, string confirmationToken)
+    public async Task ConfirmEmailAsync(string email, string confirmationToken)
     {
         ApplicationUser user = await _userManager.FindByEmailAsync(email)
             ?? throw new Exception("Unexpected error occured!");
@@ -78,7 +79,7 @@ public class AccountService : IAccountService
 
         if (!result)
         {
-            throw new Exception("Failed to email confirmation failed!");
+            throw new Exception("Email confirmation failed!");
         }
 
         user.EmailConfirmed = true;
@@ -86,7 +87,7 @@ public class AccountService : IAccountService
 
     }
 
-    private async Task SendConfirmationEmailAsync(ApplicationUser user)
+    public async Task SendConfirmationEmailAsync(ApplicationUser user)
     {
         var totpCode = await _userManager.GenerateTwoFactorTokenAsync(user, "CustomTotpProvider");
 
@@ -95,6 +96,40 @@ public class AccountService : IAccountService
         $"Concertify Team\n";
 
         await _emailSender.SendEmailAsync(user.Email!, "Concertify team. Confirm your email", emailContent);
+    }
+
+    public async Task<UserInfoDto> GetUserInfoAsync(string userId)
+    {
+        ApplicationUser user = await _userManager.FindByIdAsync(userId)
+            ?? throw new Exception("User not found!");
+        return _mapper.Map<UserInfoDto>(user);
+    }
+
+    public async Task<UserInfoDto> UpdateUserInfoAsync(UserUpdateDto userUpdate, string userId)
+    {
+        ApplicationUser user = await _userManager.FindByIdAsync(userId)
+            ?? throw new Exception("User not found!");
+
+        _mapper.Map(userUpdate, user);
+
+        var result = await _userManager.UpdateAsync(user);
+
+        if (!result.Succeeded)
+            throw new Exception(result.Errors.First().Description);
+
+        return _mapper.Map<UserInfoDto>(user);
+    }
+
+    public async Task ChangeUserPasswordAsync(ChangePasswordDto changePasswordDto, string userId)
+    {
+        ApplicationUser user = await _userManager.FindByIdAsync(userId)
+            ?? throw new Exception("User not found!");
+
+        var result = await _userManager.ChangePasswordAsync(user, changePasswordDto.OldPassword, changePasswordDto.NewPassword);
+
+        if (!result.Succeeded)
+            throw new Exception("Unexpected error occured!");
+
     }
 
 }
