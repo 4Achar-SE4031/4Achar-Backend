@@ -1,15 +1,18 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Concertify.Domain.Models;
-using Concertify.Application;
-using Concertify.Infrastructure.Data;
-using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
-using Microsoft.OpenApi.Models;
-using DotNetEnv;
+using System.Text;
+
+using Concertify.Application;
 using Concertify.Application.Services;
+using Concertify.Domain.Models;
+using Concertify.Infrastructure.Data;
+
+using DotNetEnv;
+
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 
 namespace Concertify.API
