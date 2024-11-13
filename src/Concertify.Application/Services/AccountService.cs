@@ -64,13 +64,7 @@ public class AccountService : IAccountService
 
         await SendConfirmationEmailAsync(createdUser);
 
-        UserInfoDto userInfo = new()
-        {
-            FirstName = createdUser.FirstName!,
-            LastName = createdUser.LastName!,
-            Email = createdUser.Email!,
-            UserName = createdUser.UserName!,
-        };
+        UserInfoDto userInfo = _mapper.Map<UserInfoDto>(createdUser);
 
         return userInfo;
     }
@@ -80,25 +74,25 @@ public class AccountService : IAccountService
         ApplicationUser user = await _userManager.FindByEmailAsync(email)
             ?? throw new Exception("Unexpected error occured!");
 
-        var result = await _userManager.ConfirmEmailAsync(user, confirmationToken);
+        bool result = await _userManager.VerifyTwoFactorTokenAsync(user, "CustomTotpProvider", confirmationToken);
 
-        if (!result.Succeeded)
-            throw new Exception("Unexpected error occured!");
+        if (!result)
+        {
+            throw new Exception("Failed to email confirmation failed!");
+        }
+
+        user.EmailConfirmed = true;
+        await _userManager.UpdateAsync(user);
+
     }
 
     private async Task SendConfirmationEmailAsync(ApplicationUser user)
     {
-        var confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-        var confirmationLink = "http://localhost:5000/Account/confirm_email/";
-        var emailContent = $"Thanks for subscribing to Concertify!" +
-        $"<br/><br/>" +
-        $"To activate your email, please click on the following link: " +
-        $"<br/><br/>" +
-        $"<a href=\"{confirmationLink}\">Activation Link</a>" +
-        $"<br/><br/>" +
-        $"<a href=\"{confirmationLink}\">{confirmationLink}</a>" +
-        $"<br/><br/>" +
-        $"Concertify Team";
+        var totpCode = await _userManager.GenerateTwoFactorTokenAsync(user, "CustomTotpProvider");
+
+        var emailContent = $"Thanks for subscribing to Concertify!\n" +
+        $"Your verification code is: {totpCode}\n" +
+        $"Concertify Team\n";
 
         await _emailSender.SendEmailAsync(user.Email!, "Concertify team. Confirm your email", emailContent);
     }
