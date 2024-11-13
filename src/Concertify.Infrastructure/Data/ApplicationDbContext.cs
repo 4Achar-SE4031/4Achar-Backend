@@ -14,7 +14,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        //base.OnConfiguring(optionsBuilder);
+
     }
 
     protected override void OnModelCreating(ModelBuilder builder)
