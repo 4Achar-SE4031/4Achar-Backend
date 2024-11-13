@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 using Microsoft.OpenApi.Models;
 using DotNetEnv;
+using Concertify.Application.Services;
 
 
 namespace Concertify.API
@@ -34,21 +35,32 @@ namespace Concertify.API
                                   });
             });
 
-
             Env.Load();
             builder.Configuration.AddEnvironmentVariables();
 
             // Add services to the container.
             DependencyInjectionConfiguration.RegisterServices(builder.Services);
 
-            string connectionString = builder.Configuration["ConnectionStrings:DefaultConnection"];
+            string connectionString = builder.Configuration["ConnectionStrings:DefaultConnection"]
+                ?? throw new Exception($"environment variable {nameof(connectionString)} cannot be null.");
 
             builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
                 options.UseNpgsql(connectionString));
 
-            builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+            builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+            {
+                options.SignIn.RequireConfirmedEmail = true;
+                options.User.RequireUniqueEmail = true;
+                options.Tokens.ProviderMap.Add("CustomTotpProvider", new TokenProviderDescriptor(typeof(CustomTotpTokenProvider<ApplicationUser>)));
+            })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
+
+            builder.Services.AddTransient<CustomTotpTokenProvider<ApplicationUser>>();
+
+            builder.Services.Configure<DataProtectionTokenProviderOptions>(options => 
+                options.TokenLifespan = TimeSpan.FromMinutes(2));
+
 
             builder.Services.AddAuthentication(options =>
             {
@@ -125,8 +137,8 @@ namespace Concertify.API
             using (var serviceScope = app.Services.CreateScope())
             {
                 var dbContext = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                dbContext.Database.EnsureCreated();
-                dbContext.Database.Migrate();
+                //dbContext.Database.EnsureCreated();
+                //dbContext.Database.Migrate();
             }
 
             app.UseHttpsRedirection();
