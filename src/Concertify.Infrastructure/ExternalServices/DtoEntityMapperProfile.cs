@@ -10,5 +10,7 @@ public class DtoEntityMapperProfile : Profile
     {
         CreateMap<UserRegisterDto, ApplicationUser>()
            .ForSourceMember(src => src.Password, opt => opt.DoNotValidate());
+
+        CreateMap<ApplicationUser, UserInfoDto>();
     }
 }
