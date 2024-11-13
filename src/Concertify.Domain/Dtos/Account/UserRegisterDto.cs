@@ -5,6 +5,8 @@ namespace Concertify.Domain.Dtos.Account;
 
 public record UserRegisterDto
 {
+    public string FirstName { get; set; } = default!;
+    public string LastName { get; set; } = default!;
     [Required]
     public string UserName { get; set; } = default!;
     [Required]
