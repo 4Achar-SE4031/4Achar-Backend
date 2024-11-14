@@ -10,7 +10,6 @@ using Concertify.Domain.Models;
 
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using Microsoft.EntityFrameworkCore;
 
 namespace Concertify.Application.Services;
 
@@ -63,17 +62,20 @@ public class AccountService : IAccountService
         ApplicationUser createdUser = await _userManager.FindByNameAsync(newUser.UserName!)
             ?? throw new Exception("Internal server error");
 
-        await SendConfirmationEmailAsync(createdUser);
+        await SendConfirmationEmailAsync(createdUser.Id);
 
         UserInfoDto userInfo = _mapper.Map<UserInfoDto>(createdUser);
 
         return userInfo;
     }
 
-    public async Task ConfirmEmailAsync(string email, string confirmationToken)
+    public async Task ConfirmEmailAsync(string userId, string confirmationToken)
     {
-        ApplicationUser user = await _userManager.FindByEmailAsync(email)
-            ?? throw new Exception("Unexpected error occured!");
+        ApplicationUser user = await _userManager.FindByIdAsync(userId)
+            ?? throw new Exception("User not found!");
+
+        if (user.EmailConfirmed)
+            throw new Exception("Your email has already been confirmed.");
 
         bool result = await _userManager.VerifyTwoFactorTokenAsync(user, "CustomTotpProvider", confirmationToken);
 
@@ -87,8 +89,11 @@ public class AccountService : IAccountService
 
     }
 
-    public async Task SendConfirmationEmailAsync(ApplicationUser user)
+    public async Task SendConfirmationEmailAsync(string userId)
     {
+        ApplicationUser user = await _userManager.FindByIdAsync(userId)
+            ?? throw new Exception("User not found!");
+
         var totpCode = await _userManager.GenerateTwoFactorTokenAsync(user, "CustomTotpProvider");
 
         var emailContent = $"Thanks for subscribing to Concertify!\n" +
@@ -110,8 +115,21 @@ public class AccountService : IAccountService
         ApplicationUser user = await _userManager.FindByIdAsync(userId)
             ?? throw new Exception("User not found!");
 
-        _mapper.Map(userUpdate, user);
 
+        if (userUpdate.UserName is not null)
+        {
+            var userNameResult = await _userManager.SetUserNameAsync(user, userUpdate.UserName);
+            if (!userNameResult.Succeeded)
+                throw new Exception(userNameResult.Errors.First().Description);
+        }
+
+        if (userUpdate.Email is not null)
+        {
+            var emailResult = await _userManager.SetEmailAsync(user, userUpdate.Email);
+            if (!emailResult.Succeeded)
+                throw new Exception(emailResult.Errors.First().Description);
+        }
+        _mapper.Map(userUpdate, user);
         var result = await _userManager.UpdateAsync(user);
 
         if (!result.Succeeded)
