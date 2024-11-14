@@ -5,15 +5,20 @@ using System.Text;
 using Concertify.Domain.Dtos.Account;
 using Concertify.Domain.Interfaces;
 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration.UserSecrets;
 using Microsoft.IdentityModel.Tokens;
     
 namespace Concertify.API.Controllers;
 
 [ApiController]
 [Route("[controller]")]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 public class AccountController : ControllerBase
 {
+
     private readonly IAccountService _accountService;
     private readonly IConfiguration _configuration;
 
@@ -25,6 +30,7 @@ public class AccountController : ControllerBase
 
     [HttpPost]
     [Route("jwt/create")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetTokenAsync(UserLoginDto loginDto)
     {
         List<Claim> userClaims = await _accountService.GetTokenAsync(loginDto);
@@ -49,6 +55,7 @@ public class AccountController : ControllerBase
 
     [HttpPost]
     [Route("signup")]
+    [AllowAnonymous]
     public async Task<IActionResult> RegisterAsync(UserRegisterDto registerDto)
     {
         UserInfoDto userInfo = await _accountService.RegisterUserAsync(registerDto);
@@ -58,9 +65,9 @@ public class AccountController : ControllerBase
 
     [HttpPost]
     [Route("confirm_email")]
-    public async Task<IActionResult> ConfirmEmailAsync([FromQuery] string email, [FromQuery] string confirmationToken)
+    public async Task<IActionResult> ConfirmEmailAsync([FromQuery] string confirmationToken)
     {
-        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(confirmationToken))
+        if (string.IsNullOrEmpty(confirmationToken))
         {
             return BadRequest(new
             {
@@ -68,7 +75,10 @@ public class AccountController : ControllerBase
             });
         }
 
-        await _accountService.ConfirmEmailAsync(email, confirmationToken);
+        string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? throw new Exception("User Id cannot be null.");
+
+        await _accountService.ConfirmEmailAsync(userId, confirmationToken);
 
         return Ok(new
         {
@@ -80,16 +90,12 @@ public class AccountController : ControllerBase
     [Route("me")]
     public async Task<IActionResult> GetUserInfoAsync()
     {
-        if (!User.Identity.IsAuthenticated)
-            return Unauthorized();
-
         string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
             ?? throw new Exception("User Id cannot be null.");
 
         var info = await _accountService.GetUserInfoAsync(userId);
 
         return Ok(info);
-
     }
 
     [HttpPut]
@@ -102,7 +108,6 @@ public class AccountController : ControllerBase
         var updatedInfo = await _accountService.UpdateUserInfoAsync(updateDto, userId);
 
         return Ok(updatedInfo);
-
     }
 
     [HttpPut]
@@ -110,13 +115,28 @@ public class AccountController : ControllerBase
     public async Task<IActionResult> ChangePasswordAsync(ChangePasswordDto changePassword)
     {
         string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
-               ?? throw new Exception("User Id cannot be null.");
+               ?? throw new Exception("User Id was null.");
 
         await _accountService.ChangeUserPasswordAsync(changePassword, userId);
 
         return Ok(new
         {
             detail = "Your password was changed successfully!"
+        });
+    }
+
+    [HttpPost]
+    [Route("send_confirmation_email")]
+    public async Task<IActionResult> SendConfirmationEmailAsync()
+    {
+        string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? throw new Exception("User Id cannot be null.");
+
+        await _accountService.SendConfirmationEmailAsync(userId);
+
+        return Ok(new
+        {
+            detail = "Confirmation code was sent. please check your email."
         });
     }
 }
