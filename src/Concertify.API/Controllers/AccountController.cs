@@ -124,12 +124,10 @@ public class AccountController : ControllerBase
 
     [HttpPost]
     [Route("send_confirmation_email")]
-    public async Task<IActionResult> SendConfirmationEmailAsync()
+    [AllowAnonymous]
+    public async Task<IActionResult> SendConfirmationEmailAsync(ConfirmationEmailRequestDto confirmationEmailRequestDto)
     {
-        string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? throw new Exception("User Id cannot be null.");
-
-        await _accountService.SendConfirmationEmailAsync(userId);
+        await _accountService.SendConfirmationEmailAsync(confirmationEmailRequestDto.Email);
 
         return Ok(new
         {
