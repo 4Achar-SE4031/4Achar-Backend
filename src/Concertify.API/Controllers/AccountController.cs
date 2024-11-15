@@ -127,7 +127,7 @@ public class AccountController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> SendConfirmationEmailAsync(ConfirmationEmailRequestDto confirmationEmailRequestDto)
     {
-        await _accountService.SendConfirmationEmailAsync(confirmationEmailRequestDto.Email);
+        await _accountService.SendConfirmationEmailAsync(confirmationEmailRequestDto);
 
         return Ok(new
         {

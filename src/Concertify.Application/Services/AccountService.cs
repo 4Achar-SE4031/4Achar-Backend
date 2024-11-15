@@ -63,12 +63,12 @@ public class AccountService : IAccountService
         ApplicationUser createdUser = await _userManager.FindByNameAsync(newUser.UserName!)
             ?? throw new Exception("Internal server error");
 
-        var passwordResetRequest = new PasswordResetEmailRequestDto
+        var confirmationEmailRequest = new ConfirmationEmailRequestDto 
         {
-            Email = createdUser.Email,
+            Email = registerDto.Email 
         };
 
-        await SendConfirmationEmailAsync(passwordResetRequest);
+        await SendConfirmationEmailAsync(confirmationEmailRequest);
 
         UserInfoDto userInfo = _mapper.Map<UserInfoDto>(createdUser);
 
@@ -95,9 +95,9 @@ public class AccountService : IAccountService
 
     }
 
-    public async Task SendConfirmationEmailAsync(PasswordResetEmailRequestDto passwordResetEmailRequestDto)
+    public async Task SendConfirmationEmailAsync(ConfirmationEmailRequestDto confirmationEmailRequestDto)
     {
-        ApplicationUser user = await _userManager.FindByEmailAsync(passwordResetEmailRequestDto.Email)
+        ApplicationUser user = await _userManager.FindByEmailAsync(confirmationEmailRequestDto.Email)
             ?? throw new Exception("User not found!");
 
         var totpCode = await _userManager.GenerateTwoFactorTokenAsync(user, "CustomTotpProvider");
@@ -158,9 +158,9 @@ public class AccountService : IAccountService
 
     }
 
-    public async Task<string> SendPasswordResetEmailAsync(string userEmail)
+    public async Task<string> SendPasswordResetEmailAsync(PasswordResetEmailRequestDto passwordResetEmailRequest)
     {
-        ApplicationUser user = await _userManager.FindByEmailAsync(userEmail)
+        ApplicationUser user = await _userManager.FindByEmailAsync(passwordResetEmailRequest.Email)
             ?? throw new Exception("User not found!");
 
         string passwordResetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
@@ -183,7 +183,7 @@ public class AccountService : IAccountService
 
         var subject = $"So, you want to reset your password?...";
 
-        await _emailSender.SendEmailAsync(userEmail, subject, emailContent);
+        await _emailSender.SendEmailAsync(passwordResetEmailRequest.Email, subject, emailContent);
         return passwordResetToken;
     }
 
