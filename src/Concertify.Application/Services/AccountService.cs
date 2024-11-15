@@ -62,7 +62,7 @@ public class AccountService : IAccountService
         ApplicationUser createdUser = await _userManager.FindByNameAsync(newUser.UserName!)
             ?? throw new Exception("Internal server error");
 
-        await SendConfirmationEmailAsync(createdUser.Id);
+        await SendConfirmationEmailAsync(createdUser.Email);
 
         UserInfoDto userInfo = _mapper.Map<UserInfoDto>(createdUser);
 
@@ -89,9 +89,9 @@ public class AccountService : IAccountService
 
     }
 
-    public async Task SendConfirmationEmailAsync(string userId)
+    public async Task SendConfirmationEmailAsync(string userEmail)
     {
-        ApplicationUser user = await _userManager.FindByIdAsync(userId)
+        ApplicationUser user = await _userManager.FindByEmailAsync(userEmail)
             ?? throw new Exception("User not found!");
 
         var totpCode = await _userManager.GenerateTwoFactorTokenAsync(user, "CustomTotpProvider");
