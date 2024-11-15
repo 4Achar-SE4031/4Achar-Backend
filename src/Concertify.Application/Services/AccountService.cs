@@ -69,15 +69,15 @@ public class AccountService : IAccountService
         return userInfo;
     }
 
-    public async Task ConfirmEmailAsync(string userId, string confirmationToken)
+    public async Task ConfirmEmailAsync(EmailConfirmationDto confirmationDto)
     {
-        ApplicationUser user = await _userManager.FindByIdAsync(userId)
+        ApplicationUser user = await _userManager.FindByEmailAsync(confirmationDto.Email)
             ?? throw new Exception("User not found!");
 
         if (user.EmailConfirmed)
             throw new Exception("Your email has already been confirmed.");
 
-        bool result = await _userManager.VerifyTwoFactorTokenAsync(user, "CustomTotpProvider", confirmationToken);
+        bool result = await _userManager.VerifyTwoFactorTokenAsync(user, "CustomTotpProvider", confirmationDto.ConfirmationToken);
 
         if (!result)
         {

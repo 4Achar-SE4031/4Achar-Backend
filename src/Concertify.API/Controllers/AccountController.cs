@@ -65,20 +65,17 @@ public class AccountController : ControllerBase
 
     [HttpPost]
     [Route("confirm_email")]
-    public async Task<IActionResult> ConfirmEmailAsync([FromQuery] string confirmationToken)
+    [AllowAnonymous]
+    public async Task<IActionResult> ConfirmEmailAsync(EmailConfirmationDto confirmationDto)
     {
-        if (string.IsNullOrEmpty(confirmationToken))
+        if (string.IsNullOrEmpty(confirmationDto.ConfirmationToken) || string.IsNullOrEmpty(confirmationDto.Email))
         {
             return BadRequest(new
             {
-                detail = "Either email address or activation token is not valid."
+                detail = "Either email address or confirmation code is not valid."
             });
         }
-
-        string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? throw new Exception("User Id cannot be null.");
-
-        await _accountService.ConfirmEmailAsync(userId, confirmationToken);
+        await _accountService.ConfirmEmailAsync(confirmationDto);
 
         return Ok(new
         {

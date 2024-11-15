@@ -10,7 +10,7 @@ public interface IAccountService
 {
     public Task<List<Claim>> GetTokenAsync(UserLoginDto loginDto);
     public Task<UserInfoDto> RegisterUserAsync(UserRegisterDto registerDto);
-    public Task ConfirmEmailAsync(string email, string confirmationToken);
+    public Task ConfirmEmailAsync(EmailConfirmationDto confirmationDto);
     public Task SendConfirmationEmailAsync(string userId);
     public Task<UserInfoDto> GetUserInfoAsync(string userId);
     public Task<UserInfoDto> UpdateUserInfoAsync(UserUpdateDto userUpdate, string userId);
