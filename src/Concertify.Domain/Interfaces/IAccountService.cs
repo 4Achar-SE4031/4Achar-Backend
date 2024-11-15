@@ -15,5 +15,6 @@ public interface IAccountService
     public Task<UserInfoDto> GetUserInfoAsync(string userId);
     public Task<UserInfoDto> UpdateUserInfoAsync(UserUpdateDto userUpdate, string userId);
     public Task ChangeUserPasswordAsync(ChangePasswordDto changePasswordDto, string userId);
-
+    public Task<string> SendPasswordResetEmailAsync(PasswordResetEmailRequestDto passwordResetEmailRequestDto);
+    public Task ResetPasswordAsync(UserPasswordResetDto passwordResetDto);
 }

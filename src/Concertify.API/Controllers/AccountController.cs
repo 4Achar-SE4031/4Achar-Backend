@@ -134,4 +134,31 @@ public class AccountController : ControllerBase
             detail = "Confirmation code was sent. please check your email."
         });
     }
+
+    [HttpPost]
+    [Route("send_reset_password_email")]
+    [AllowAnonymous]
+    public async Task<IActionResult> SendPasswordResetEmailAsync(PasswordResetEmailRequestDto passwordResetEmailRequestDto)
+    {
+        string passwordResetToken = await _accountService.SendPasswordResetEmailAsync(passwordResetEmailRequestDto);
+
+        return Ok(new
+        {
+            detail = "Password reset link was sent. please check your email.",
+            token = passwordResetToken
+        });
+    }
+
+    [HttpPost]
+    [Route("reset_password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ResetPasswordAsync(UserPasswordResetDto passwordResetDto)
+    {
+        await _accountService.ResetPasswordAsync(passwordResetDto);
+
+        return Ok(new
+        {
+            detail = "Your password was changed successfully."
+        });
+    }
 }

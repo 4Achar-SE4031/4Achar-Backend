@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Policy;
 
 using AutoMapper;
 
@@ -62,7 +63,12 @@ public class AccountService : IAccountService
         ApplicationUser createdUser = await _userManager.FindByNameAsync(newUser.UserName!)
             ?? throw new Exception("Internal server error");
 
-        await SendConfirmationEmailAsync(createdUser.Email);
+        var passwordResetRequest = new PasswordResetEmailRequestDto
+        {
+            Email = createdUser.Email,
+        };
+
+        await SendConfirmationEmailAsync(passwordResetRequest);
 
         UserInfoDto userInfo = _mapper.Map<UserInfoDto>(createdUser);
 
@@ -89,18 +95,20 @@ public class AccountService : IAccountService
 
     }
 
-    public async Task SendConfirmationEmailAsync(string userEmail)
+    public async Task SendConfirmationEmailAsync(PasswordResetEmailRequestDto passwordResetEmailRequestDto)
     {
-        ApplicationUser user = await _userManager.FindByEmailAsync(userEmail)
+        ApplicationUser user = await _userManager.FindByEmailAsync(passwordResetEmailRequestDto.Email)
             ?? throw new Exception("User not found!");
 
         var totpCode = await _userManager.GenerateTwoFactorTokenAsync(user, "CustomTotpProvider");
+
+        var subject = $"{user.FirstName}, Please confirm your email.";
 
         var emailContent = $"Thanks for subscribing to Concertify!\n" +
         $"Your verification code is: {totpCode}\n" +
         $"Concertify Team\n";
 
-        await _emailSender.SendEmailAsync(user.Email!, "Concertify team. Confirm your email", emailContent);
+        await _emailSender.SendEmailAsync(user.Email!, subject, emailContent);
     }
 
     public async Task<UserInfoDto> GetUserInfoAsync(string userId)
@@ -148,6 +156,46 @@ public class AccountService : IAccountService
         if (!result.Succeeded)
             throw new Exception("Unexpected error occured!");
 
+    }
+
+    public async Task<string> SendPasswordResetEmailAsync(string userEmail)
+    {
+        ApplicationUser user = await _userManager.FindByEmailAsync(userEmail)
+            ?? throw new Exception("User not found!");
+
+        string passwordResetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+        var uriBuilder = new UriBuilder
+        {
+            Scheme = "http",
+            Host = "localhost",
+            Port = 3000,
+            Path = "account/reset_password",
+            Query = $"PasswordResetToken={passwordResetToken}"
+
+        };
+        string resetUrl = uriBuilder.Uri.ToString();
+
+        var emailContent = $"Dear {user.UserName}" +
+            "click on the link below to reset your password:\n" +
+            $"{resetUrl}\n" +
+            "Concertify Team.\n";
+
+        var subject = $"So, you want to reset your password?...";
+
+        await _emailSender.SendEmailAsync(userEmail, subject, emailContent);
+        return passwordResetToken;
+    }
+
+    public async Task ResetPasswordAsync(UserPasswordResetDto passwordResetDto)
+    {
+        ApplicationUser user = await _userManager.FindByEmailAsync(passwordResetDto.UserEmail)
+            ?? throw new Exception("User not found!");
+
+        var result = await _userManager.ResetPasswordAsync(user, passwordResetDto.PasswordResetToken, passwordResetDto.NewPassword);
+
+        if (!result.Succeeded)
+            throw new Exception("Failed to reset password!");
     }
 
 }
