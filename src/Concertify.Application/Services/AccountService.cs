@@ -171,12 +171,12 @@ public class AccountService : IAccountService
             Host = "localhost",
             Port = 3000,
             Path = "account/reset_password",
-            Query = $"PasswordResetToken={passwordResetToken}"
+            Query = $"username={user.UserName}&PasswordResetToken={passwordResetToken}"
 
         };
         string resetUrl = uriBuilder.Uri.ToString();
 
-        var emailContent = $"Dear {user.UserName}" +
+        var emailContent = $"Dear {user.UserName},\n" +
             "click on the link below to reset your password:\n" +
             $"{resetUrl}\n" +
             "Concertify Team.\n";
@@ -189,7 +189,7 @@ public class AccountService : IAccountService
 
     public async Task ResetPasswordAsync(UserPasswordResetDto passwordResetDto)
     {
-        ApplicationUser user = await _userManager.FindByEmailAsync(passwordResetDto.UserEmail)
+        ApplicationUser user = await _userManager.FindByNameAsync(passwordResetDto.UserName)
             ?? throw new Exception("User not found!");
 
         var result = await _userManager.ResetPasswordAsync(user, passwordResetDto.PasswordResetToken, passwordResetDto.NewPassword);

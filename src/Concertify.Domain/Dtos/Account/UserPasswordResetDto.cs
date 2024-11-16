@@ -5,7 +5,7 @@ namespace Concertify.Domain.Dtos.Account;
 public record UserPasswordResetDto
 {
     [Required]
-    public string UserEmail { get; set; } = default!;
+    public string UserName { get; set; } = default!;
     [Required]
     public string PasswordResetToken { get; set; } = default!;
     [Required]
