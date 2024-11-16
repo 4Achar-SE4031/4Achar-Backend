@@ -34,7 +34,8 @@ namespace Concertify.API
                                       policy.WithOrigins("http://localhost:3000",
                                                           "http://localhost:3001")
                                       .AllowAnyHeader()
-                                      .AllowAnyHeader();
+                                      .AllowAnyHeader()
+                                      .AllowAnyMethod();
                                   });
             });
 
