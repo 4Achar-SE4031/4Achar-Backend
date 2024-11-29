@@ -75,6 +75,8 @@ public class GenericRepository<T> : IGenericRepository<T> where T : EntityBase
     {
         IQueryable<T> query = _dbSet.AsQueryable<T>();
 
+        query = query.Where(e => e.Id == id);
+
         foreach (var include in includes)
         {
             query = query.Include(include);
