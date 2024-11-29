@@ -9,6 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Concertify.Domain\Concertify.Domain.csproj" />
     <ProjectReference Include="..\Concertify.Infrastructure\Concertify.Infrastructure.csproj" />
+    <ProjectReference Include="..\Concertify.Scraper\Concertify.Scraper.csproj" />
   </ItemGroup>
 
   <ItemGroup>
