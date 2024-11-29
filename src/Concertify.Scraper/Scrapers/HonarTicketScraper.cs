@@ -52,7 +52,7 @@ public class HonarTicketScraper(IWebDriver driver) : IWebScraper
             actions.Click(showPriceElem);
             actions.Perform();
             var priceSelector = "/html/body/div[1]/div[2]/div[2]/div[4]/div[5]/div/div/div[2]/div[2]/span";
-            var priceSelector2 = "/html/body/div[1]/div[2]/div[2]/div[4]/div[5]/div/div/div[2]/div[3]/span";
+            //var priceSelector2 = "/html/body/div[1]/div[2]/div[2]/div[4]/div[5]/div/div/div[2]/div[3]/span";
 
             IWebElement priceElem = _driver.FindElement(By.XPath(priceSelector));
 
