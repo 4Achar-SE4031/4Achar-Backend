@@ -5,11 +5,13 @@ VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Concertify.API", "Concertify.API\Concertify.API.csproj", "{52D1D874-AAC7-47A3-B02B-C9385E182408}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Concertify.Application", "Concertify.Application\Concertify.Application.csproj", "{70661B11-0965-4FA2-8606-A4C83FDC3D67}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Concertify.Application", "Concertify.Application\Concertify.Application.csproj", "{70661B11-0965-4FA2-8606-A4C83FDC3D67}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Concertify.Infrastructure", "Concertify.Infrastructure\Concertify.Infrastructure.csproj", "{F185C4B8-62FA-42A6-8C8B-A758B594EC97}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Concertify.Infrastructure", "Concertify.Infrastructure\Concertify.Infrastructure.csproj", "{F185C4B8-62FA-42A6-8C8B-A758B594EC97}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Concertify.Domain", "Concertify.Domain\Concertify.Domain.csproj", "{3551A828-34FD-4815-9F75-C4EAB5CFFDA5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Concertify.Domain", "Concertify.Domain\Concertify.Domain.csproj", "{3551A828-34FD-4815-9F75-C4EAB5CFFDA5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Concertify.Scraper", "Concertify.Scraper\Concertify.Scraper.csproj", "{42EF7BEA-8D96-4915-9608-3501E5CA7CCE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{3551A828-34FD-4815-9F75-C4EAB5CFFDA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3551A828-34FD-4815-9F75-C4EAB5CFFDA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3551A828-34FD-4815-9F75-C4EAB5CFFDA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{42EF7BEA-8D96-4915-9608-3501E5CA7CCE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{42EF7BEA-8D96-4915-9608-3501E5CA7CCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{42EF7BEA-8D96-4915-9608-3501E5CA7CCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{42EF7BEA-8D96-4915-9608-3501E5CA7CCE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
