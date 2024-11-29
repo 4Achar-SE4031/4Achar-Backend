@@ -35,12 +35,13 @@ public class ConcertService : IConcertService
         Expression<Func<Concert, bool>>[] filters =
         [
             c => concertFilterDto.Title == null || c.Title.StartsWith(concertFilterDto.Title),
-            c => concertFilterDto.StartRange == null || c.StartDate.CompareTo(concertFilterDto.StartRange) >= 0,
-            c => concertFilterDto.EndRange == null || c.StartDate.CompareTo(concertFilterDto.EndRange) < 0,
+            c => concertFilterDto.StartRange == null || c.StartDate.Contains(concertFilterDto.StartRange),
+            c => concertFilterDto.EndRange == null || c.StartDate.Contains(concertFilterDto.EndRange),
             c => concertFilterDto.Province == null || (c.Province != null && c.Province.StartsWith(concertFilterDto.Province)),
             c => concertFilterDto.City == null || (c.City != null && c.City.StartsWith(concertFilterDto.City)),
             c => concertFilterDto.Category == null || c.Category.StartsWith(concertFilterDto.Category),
-            c => concertFilterDto.TicketPriceRangeStart == null || c.TicketPrice.StartsWith(concertFilterDto.TicketPriceRangeStart.ToString())
+            c => concertFilterDto.TicketPriceRangeStart == null || c.TicketPrice.Contains(concertFilterDto.TicketPriceRangeStart),
+            c => concertFilterDto.TicketPriceRangeEnd == null || c.TicketPrice.Contains(concertFilterDto.TicketPriceRangeEnd)
             //c => concertFilterDto.TicketPriceRangeStart == null || c.TicketPrice >= concertFilterDto.TicketPriceRangeStart,
             //c => concertFilterDto.TicketPriceRangeEnd== null || c.TicketPrice >= concertFilterDto.TicketPriceRangeEnd,
         ];
