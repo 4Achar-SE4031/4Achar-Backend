@@ -9,6 +9,8 @@ using Concertify.Infrastructure.Data;
 using DotNetEnv;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using static Microsoft.AspNetCore.Http.StatusCodes;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -21,25 +23,27 @@ namespace Concertify.API
     {
         public static void Main(string[] args)
         {
+            Env.Load();
 
             var MyAllowSpecificOrigins = "_myAllowSpecificOrigin";
 
             var builder = WebApplication.CreateBuilder(args);
+            var allowedOrigins = Environment.GetEnvironmentVariable("CORS_ALLOWED_ORIGINS")?.Split(',');
 
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy(name: MyAllowSpecificOrigins,
                                   policy =>
                                   {
-                                      policy.WithOrigins("http://localhost:3000",
-                                                          "http://localhost:3001")
-                                      .AllowAnyHeader()
-                                      .AllowAnyHeader()
-                                      .AllowAnyMethod();
+                                      if (allowedOrigins != null)
+                                          policy.WithOrigins(allowedOrigins)
+                                          .AllowAnyHeader()
+                                          .AllowAnyHeader()
+                                          .AllowAnyMethod();
                                   });
             });
 
-            Env.Load("TestEnv.env");
+
             builder.Configuration.AddEnvironmentVariables();
 
             // Add services to the container.
@@ -127,7 +131,22 @@ namespace Concertify.API
                 });
             });
 
+            if (!builder.Environment.IsDevelopment())
+            {
+                builder.Services.AddHttpsRedirection(options =>
+                {
+                    options.RedirectStatusCode = Status308PermanentRedirect;
+                    options.HttpsPort = 443;
+                });
+
+                builder.Services.Configure<ForwardedHeadersOptions>(options =>
+                {
+                    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+                });
+            }
+
             var app = builder.Build();
+
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -142,16 +161,19 @@ namespace Concertify.API
             {
                 var dbContext = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 dbContext.Database.EnsureCreated();
-                dbContext.Database.Migrate();
+                //dbContext.Database.Migrate();
             }
 
-            app.UseHttpsRedirection();
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseForwardedHeaders();
+                app.UseHttpsRedirection();
+            }
 
             app.UseCors(MyAllowSpecificOrigins);
 
             app.UseAuthorization();
             app.UseAuthentication();
-
 
             app.MapControllers();
 
