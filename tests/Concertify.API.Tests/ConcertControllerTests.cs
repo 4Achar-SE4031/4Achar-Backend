@@ -83,4 +83,46 @@ public class ConcertControllerTests
         var ex = await Assert.ThrowsAsync<ItemNotFoundException>(() => _mockConcertService.Object.GetConcertByIdAsync(concertId));
         Assert.Equal(typeof(ItemNotFoundException), ex.GetType());
     }
+
+    [Fact]
+    public async Task SearchAsync_ReturnsOkResult_WithListOfConcerts()
+    {
+        string searchTerm = "ناصر";
+        var concertSearch = new ConcertSearchDto() { SearchTerm = searchTerm};
+        var concerts = new List<ConcertSummaryDto> {
+            new() {
+                Id = 1,
+                Title = "ناصر عبداللهی",
+                StartDate = "دوشنبه 19 آذر",
+                City = "تهران",
+                Category = "کنسرت"
+            },
+            new()
+            {
+                Id = 2,
+                Title = "ناصر یداللهی",
+                StartDate = "چهارشنبه 23 اسفند",
+                City = "مشهد",
+                Category = "کنسرت"
+
+            },
+            new()
+            {
+                Id = 3,
+                Title = "صابر فضل الهی",
+                StartDate = "سه شنبه 22 اسفند",
+                City = "اصفهان",
+                Category = "کنسرت"
+
+            },
+        };
+        _mockConcertService.Setup(service => service.SearchAsync(concertSearch)).ReturnsAsync(concerts[0..2]);
+
+        var result = await _controller.SearchAsync(concertSearch);
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var returnedConcerts = Assert.IsType<List<ConcertSummaryDto>>(okResult.Value);
+    }
+
+
 }
