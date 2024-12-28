@@ -43,12 +43,23 @@ public class ConcertService : IConcertService
             c => concertFilterDto.Category == null || c.Category.StartsWith(concertFilterDto.Category),
             c => concertFilterDto.TicketPriceRangeStart == null || c.TicketPrice.Contains(concertFilterDto.TicketPriceRangeStart),
             c => concertFilterDto.TicketPriceRangeEnd == null || c.TicketPrice.Contains(concertFilterDto.TicketPriceRangeEnd)
-            //c => concertFilterDto.TicketPriceRangeStart == null || c.TicketPrice >= concertFilterDto.TicketPriceRangeStart,
-            //c => concertFilterDto.TicketPriceRangeEnd== null || c.TicketPrice >= concertFilterDto.TicketPriceRangeEnd,
         ];
 
         List<Concert> concerts = await _concertRepository.GetFilteredAsync(filters, concertFilterDto.Skip, concertFilterDto.Take);
 
+        List<ConcertSummaryDto> concertDtos = _mapper.Map<List<ConcertSummaryDto>>(concerts);
+
+        return concertDtos;
+    }
+
+    public async Task<List<ConcertSummaryDto>> SearchAsync(ConcertSearchDto concertSearch)
+    {
+        Expression<Func<Concert, bool>>[] filters =
+        [
+            c => c.Title.Contains(concertSearch.SearchTerm),
+        ];
+
+        List<Concert> concerts = await _concertRepository.GetFilteredAsync(filters, null, null);
         List<ConcertSummaryDto> concertDtos = _mapper.Map<List<ConcertSummaryDto>>(concerts);
 
         return concertDtos;

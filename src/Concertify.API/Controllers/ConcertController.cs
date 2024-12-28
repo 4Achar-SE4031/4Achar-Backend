@@ -36,4 +36,13 @@ public class ConcertController : ControllerBase
         return Ok(concert);
     }
 
+    [HttpPost]
+    [Route("search")]
+    [Produces(typeof(List<ConcertSummaryDto>))]
+    public async Task<IActionResult> SearchAsync(ConcertSearchDto concertSearch)
+    {
+        List<ConcertSummaryDto> concerts = await _concertService.SearchAsync(concertSearch);
+
+        return Ok(concerts);
+    }
 }
