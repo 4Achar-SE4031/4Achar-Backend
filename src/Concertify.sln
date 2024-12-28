@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Concertify.Infrastructure",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Concertify.Domain", "Concertify.Domain\Concertify.Domain.csproj", "{3551A828-34FD-4815-9F75-C4EAB5CFFDA5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Concertify.Scraper", "Concertify.Scraper\Concertify.Scraper.csproj", "{42EF7BEA-8D96-4915-9608-3501E5CA7CCE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Concertify.Scraper", "Concertify.Scraper\Concertify.Scraper.csproj", "{42EF7BEA-8D96-4915-9608-3501E5CA7CCE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Concertify.API.Tests", "..\tests\Concertify.API.Tests\Concertify.API.Tests.csproj", "{56BAFDE2-55F2-4B4D-A17C-37BAC7A8B253}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{42EF7BEA-8D96-4915-9608-3501E5CA7CCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{42EF7BEA-8D96-4915-9608-3501E5CA7CCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{42EF7BEA-8D96-4915-9608-3501E5CA7CCE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{56BAFDE2-55F2-4B4D-A17C-37BAC7A8B253}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56BAFDE2-55F2-4B4D-A17C-37BAC7A8B253}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{56BAFDE2-55F2-4B4D-A17C-37BAC7A8B253}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56BAFDE2-55F2-4B4D-A17C-37BAC7A8B253}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
