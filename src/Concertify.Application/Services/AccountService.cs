@@ -6,6 +6,7 @@ using System.Security.Policy;
 using AutoMapper;
 
 using Concertify.Domain.Dtos.Account;
+using Concertify.Domain.Exceptions;
 using Concertify.Domain.Interfaces;
 using Concertify.Domain.Models;
 
@@ -30,7 +31,7 @@ public class AccountService : IAccountService
     public async Task<List<Claim>> GetTokenAsync(UserLoginDto loginDto)
     {
         var user = await _userManager.FindByNameAsync(loginDto.UserName)
-            ?? throw new Exception("User not found!");
+            ?? throw new UserNotFoundException($"No user with username {loginDto.UserName} exists.");
 
         if (!await _userManager.CheckPasswordAsync(user, loginDto.Password))
             throw new UnauthorizedAccessException("Incorrect password!");
@@ -78,7 +79,7 @@ public class AccountService : IAccountService
     public async Task ConfirmEmailAsync(EmailConfirmationDto confirmationDto)
     {
         ApplicationUser user = await _userManager.FindByEmailAsync(confirmationDto.Email)
-            ?? throw new Exception("User not found!");
+            ?? throw new UserNotFoundException($"no user with email {confirmationDto.Email} exists.");
 
         if (user.EmailConfirmed)
             throw new Exception("Your email has already been confirmed.");
@@ -98,7 +99,7 @@ public class AccountService : IAccountService
     public async Task SendConfirmationEmailAsync(ConfirmationEmailRequestDto confirmationEmailRequestDto)
     {
         ApplicationUser user = await _userManager.FindByEmailAsync(confirmationEmailRequestDto.Email)
-            ?? throw new Exception("User not found!");
+            ?? throw new UserNotFoundException($"No user with email {confirmationEmailRequestDto.Email} exists");
 
         var totpCode = await _userManager.GenerateTwoFactorTokenAsync(user, "CustomTotpProvider");
 
@@ -114,14 +115,14 @@ public class AccountService : IAccountService
     public async Task<UserInfoDto> GetUserInfoAsync(string userId)
     {
         ApplicationUser user = await _userManager.FindByIdAsync(userId)
-            ?? throw new Exception("User not found!");
+            ?? throw new UserNotFoundException($"no user with the id {userId} exists.");
         return _mapper.Map<UserInfoDto>(user);
     }
 
     public async Task<UserInfoDto> UpdateUserInfoAsync(UserUpdateDto userUpdate, string userId)
     {
         ApplicationUser user = await _userManager.FindByIdAsync(userId)
-            ?? throw new Exception("User not found!");
+            ?? throw new UserNotFoundException($"no user with the id {userId} exists.");
 
 
         if (userUpdate.UserName is not null)
@@ -149,19 +150,19 @@ public class AccountService : IAccountService
     public async Task ChangeUserPasswordAsync(ChangePasswordDto changePasswordDto, string userId)
     {
         ApplicationUser user = await _userManager.FindByIdAsync(userId)
-            ?? throw new Exception("User not found!");
+            ?? throw new UserNotFoundException($"no user with the id {userId} exists.");
 
         var result = await _userManager.ChangePasswordAsync(user, changePasswordDto.OldPassword, changePasswordDto.NewPassword);
 
         if (!result.Succeeded)
-            throw new Exception("Unexpected error occured!");
+            throw new Exception(result.Errors.First().Description);
 
     }
 
     public async Task<string> SendPasswordResetEmailAsync(PasswordResetEmailRequestDto passwordResetEmailRequest)
     {
         ApplicationUser user = await _userManager.FindByEmailAsync(passwordResetEmailRequest.Email)
-            ?? throw new Exception("User not found!");
+            ?? throw new UserNotFoundException($"No user with email {passwordResetEmailRequest.Email} exists");
 
         string passwordResetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
 
@@ -190,12 +191,12 @@ public class AccountService : IAccountService
     public async Task ResetPasswordAsync(UserPasswordResetDto passwordResetDto)
     {
         ApplicationUser user = await _userManager.FindByNameAsync(passwordResetDto.UserName)
-            ?? throw new Exception("User not found!");
+            ?? throw new UserNotFoundException($"No user with username {passwordResetDto.UserName} exists");
 
         var result = await _userManager.ResetPasswordAsync(user, passwordResetDto.PasswordResetToken, passwordResetDto.NewPassword);
 
         if (!result.Succeeded)
-            throw new Exception("Failed to reset password!");
+            throw new Exception(result.Errors.First().Description);
     }
 
 }

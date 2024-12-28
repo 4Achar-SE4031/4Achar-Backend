@@ -3,6 +3,7 @@
 using AutoMapper;
 
 using Concertify.Domain.Dtos.Concert;
+using Concertify.Domain.Exceptions;
 using Concertify.Domain.Interfaces;
 using Concertify.Domain.Models;
 
@@ -22,7 +23,7 @@ public class ConcertService : IConcertService
     public async Task<ConcertDetailsDto> GetConcertByIdAsync(int concertId)
     {
         Concert entity = await _concertRepository.GetByIdAsync(concertId)
-            ?? throw new Exception("Concert not found.");
+            ?? throw new ItemNotFoundException(concertId);
 
         ConcertDetailsDto concert = _mapper.Map<ConcertDetailsDto>(entity);
 
