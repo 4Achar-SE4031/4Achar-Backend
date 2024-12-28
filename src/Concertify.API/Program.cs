@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Concertify.API.Middlewares;
 
 
 namespace Concertify.API
@@ -49,7 +50,7 @@ namespace Concertify.API
             // Add services to the container.
             DependencyInjectionConfiguration.RegisterServices(builder.Services);
 
-            string connectionString = builder.Configuration["ConnectionStrings:DefaultConnection"]
+            string connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
                 ?? throw new Exception($"environment variable {nameof(connectionString)} cannot be null.");
 
             builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
@@ -99,6 +100,7 @@ namespace Concertify.API
             builder.Services.Configure<IdentityOptions>(options =>
                 options.ClaimsIdentity.UserIdClaimType = ClaimTypes.NameIdentifier);
 
+            builder.Services.AddTransient<ExceptionMiddleware>();
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -163,6 +165,8 @@ namespace Concertify.API
                 dbContext.Database.EnsureCreated();
                 //dbContext.Database.Migrate();
             }
+
+            app.UseMiddleware<ExceptionMiddleware>();
 
             if (!app.Environment.IsDevelopment())
             {
