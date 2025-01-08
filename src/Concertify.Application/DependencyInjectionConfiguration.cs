@@ -3,15 +3,11 @@ using Concertify.Domain.Interfaces;
 using Concertify.Domain.Models;
 using Concertify.Infrastructure.Data;
 using Concertify.Infrastructure.ExternalServices;
-using Concertify.Scraper.Scrapers;
+using Concertify.Infrastructure.ExternalServices.Scrapers;
+using Concertify.Infrastructure.Interfaces;
 
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.Extensions.DependencyInjection;
-
-using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Remote;
-
 
 namespace Concertify.Application;
 
@@ -28,18 +24,7 @@ public class DependencyInjectionConfiguration
         
         services.AddScoped<IScraperService, ScraperService>();
         services.AddScoped<IWebScraper, HonarTicketScraper>();
-        services.AddScoped<IWebDriver, RemoteWebDriver>(sp =>
-        {
-            string url = Environment.GetEnvironmentVariable("SELENIUM_REMOTE_WEBDRIVER")
-                ?? throw new ArgumentNullException("No url for selenium remote web driver was provided.");
-            Uri webDriverUri = new Uri(url);
-            ChromeOptions options = new ChromeOptions();
-            options.AddArguments("--ingore-ssl-errors=yes",
-                "--ignore-certificate-errors",
-                "--no-sandbox",
-                "--headless");
-            return ActivatorUtilities.CreateInstance<RemoteWebDriver>(sp, webDriverUri, options);
-        });
+        services.AddScoped<IScraperManager, ScraperManager>();
     }
         
 }
