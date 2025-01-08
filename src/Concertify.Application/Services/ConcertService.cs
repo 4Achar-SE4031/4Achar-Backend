@@ -9,16 +9,10 @@ using Concertify.Domain.Models;
 
 namespace Concertify.Application.Services;
 
-public class ConcertService : IConcertService
+public class ConcertService(IGenericRepository<Concert> concertRepository, IMapper mapper) : IConcertService
 {
-    private readonly IGenericRepository<Concert> _concertRepository;
-    private readonly IMapper _mapper;
-
-    public ConcertService(IGenericRepository<Concert> concertRepository, IMapper mapper)
-    {
-        _concertRepository = concertRepository;
-        _mapper = mapper;
-    }
+    private readonly IGenericRepository<Concert> _concertRepository = concertRepository;
+    private readonly IMapper _mapper = mapper;
 
     public async Task<ConcertDetailsDto> GetConcertByIdAsync(int concertId)
     {
@@ -36,9 +30,8 @@ public class ConcertService : IConcertService
         Expression<Func<Concert, bool>>[] filters =
         [
             c => concertFilterDto.Title == null || c.Title.StartsWith(concertFilterDto.Title),
-            c => concertFilterDto.StartRange == null || c.StartDate.Contains(concertFilterDto.StartRange),
-            c => concertFilterDto.EndRange == null || c.StartDate.Contains(concertFilterDto.EndRange),
-            c => concertFilterDto.Province == null || (c.Province != null && c.Province.StartsWith(concertFilterDto.Province)),
+            c => concertFilterDto.StartRange == null || DateTime.Compare(c.StartDateTime, concertFilterDto.StartRange.Value) >= 0,
+            c => concertFilterDto.EndRange == null || DateTime.Compare(c.StartDateTime, concertFilterDto.EndRange.Value) <= 0,
             c => concertFilterDto.City == null || (c.City != null && c.City.StartsWith(concertFilterDto.City)),
             c => concertFilterDto.Category == null || c.Category.StartsWith(concertFilterDto.Category),
             c => concertFilterDto.TicketPriceRangeStart == null || c.TicketPrice.Contains(concertFilterDto.TicketPriceRangeStart),
