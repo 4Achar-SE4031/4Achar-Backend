@@ -24,4 +24,8 @@
     <ProjectReference Include="..\Concertify.Domain\Concertify.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\images\concert\" />
+  </ItemGroup>
+
 </Project>

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text;
 
+using Concertify.API.Middlewares;
 using Concertify.Application;
 using Concertify.Application.Services;
 using Concertify.Domain.Models;
@@ -9,13 +10,13 @@ using Concertify.Infrastructure.Data;
 using DotNetEnv;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using static Microsoft.AspNetCore.Http.StatusCodes;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Concertify.API.Middlewares;
+
+using static Microsoft.AspNetCore.Http.StatusCodes;
 
 
 namespace Concertify.API
@@ -24,7 +25,7 @@ namespace Concertify.API
     {
         public static void Main(string[] args)
         {
-            Env.Load();
+            Env.Load("DevEnv.env");
 
             var MyAllowSpecificOrigins = "_myAllowSpecificOrigin";
 
