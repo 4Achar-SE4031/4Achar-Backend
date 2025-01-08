@@ -13,12 +13,6 @@ services:
             timeout: 5s
             retries: 5
 
-    scraper:
-        image: selenium/standalone-chrome:131.0.6778.108-chromedriver-131.0.6778.87-grid-4.27.0-20241204
-        container_name: scraper
-        ports:
-            - '4444:4444'
-
     backend:
         build:
             context: .
