@@ -33,7 +33,10 @@ USER root
 
 COPY ["./aspnetapp.pfx", "/https/"]
 
-RUN chmod 777 /src/Concertify.API/wwwroot
+RUN mkdir ./wwwroot
+RUN mkdir ./wwwroot/images
+RUN mkdir ./wwwroot/images/concert
+RUN chmod -R 777 /src/Concertify.API/wwwroot
 
 CMD dotnet run --no-launch-profile
 
@@ -52,7 +55,9 @@ COPY ["./aspnetapp.pfx", "/https/"]
 USER root
 
 
-COPY ./src/Concertify.API/wwwroot ./wwwroot
+RUN mkdir ./wwwroot
+RUN mkdir ./wwwroot/images
+RUN mkdir ./wwwroot/images/concert
 RUN chmod -R 777 /app/wwwroot
 
 USER app
