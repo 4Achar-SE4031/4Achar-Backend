@@ -17,6 +17,7 @@ services:
         build:
             context: .
             dockerfile: ./Dockerfile
+            target: final
         container_name: concertify_backend
         ports:
             - "5000:80"
@@ -24,12 +25,15 @@ services:
 
         volumes: 
             - app_data:/app
-        env_file:
-            - ./src/Concertify.API/TestEnv.env
         depends_on: 
             db:
                 condition: service_healthy
                 restart: true
+        develop:
+            watch:
+                - action: rebuild
+                  path: .
+
 
 volumes:
     pg_data:
