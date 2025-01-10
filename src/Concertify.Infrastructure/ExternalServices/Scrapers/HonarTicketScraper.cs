@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Text.RegularExpressions;
 
 using Concertify.Domain.Models;
 using Concertify.Infrastructure.Dtos;
@@ -14,7 +15,7 @@ public class HonarTicketScraper(IConfiguration configuration) : IWebScraper
 {
     private readonly IConfiguration _configuration = configuration;
     readonly string baseUrl = "https://www.honarticket.com";
-    public async Task<List<Concert>> ExtractLinks(string url)
+    public async IAsyncEnumerable<Concert> ExtractLinks(string url)
     {
         HttpClient client = new();
         var response = await client.GetAsync(url);
@@ -81,10 +82,10 @@ public class HonarTicketScraper(IConfiguration configuration) : IWebScraper
                 Concert concert = await Scrape(context);
                 scrapedConcerts.Add(concert);
                 urls.Add(context);
+
+                yield return concert;
             }
         }
-
-        return scrapedConcerts;
     }
 
     public async Task<Concert> Scrape(ScraperContext context)
@@ -120,24 +121,33 @@ public class HonarTicketScraper(IConfiguration configuration) : IWebScraper
 
         var mapNode = doc.DocumentNode.SelectNodes(mapPath)?.First();
 
-        string latitude, longtitude;
+        float latitude = default, longtitude = default;
+        string[] latLon;
         if (mapNode != null)
         {
             var mapUri = mapNode.GetAttributeValue("href", "").Trim();
-            latitude = mapUri;
-            longtitude = mapUri;
-        }
-        else
-        {
-            latitude = "";
-            longtitude = "";
+            
+            if (mapUri.StartsWith("geo"))
+            {
+                latLon = mapUri.Replace("geo:", "").Split(',');
+            }
+            else
+            {
+                latLon = new Uri(mapUri).Query.Replace("?q=", "").Split(',');
+            }
+        
+            _ = float.TryParse(latLon[0], out latitude);
+            _ = float.TryParse(latLon[1], out longtitude);
         }
 
         int[] vals = Array.ConvertAll(date.Split("-"), int.Parse);
-        var timeVals = Array.ConvertAll(PersianDigitsToEnglish(time).Split(":"), int.Parse);
-        var gregDate = pc.ToDateTime(vals[0], vals[1], vals[2], timeVals[0], timeVals[1], 0, 0);
+        int[] timeVals = Array.ConvertAll(PersianDigitsToEnglish(time).Split(":"), int.Parse);
+        var persianDate = pc.ToDateTime(vals[0], vals[1], vals[2], timeVals[0], timeVals[1], 0, 0);
+        var utcDate = persianDate.ToUniversalTime();
 
-        priceRange = priceRange.Replace(",", "");
+        priceRange = PersianDigitsToEnglish(priceRange.Replace(",", ""));
+        var prices = ExtractNumbersFromText(priceRange);
+        prices.Sort();
 
         string saveDir = _configuration["ScrapedImagesPath"]
             ?? throw new NullReferenceException("The path for saving the scraped images was not provided.");
@@ -151,14 +161,14 @@ public class HonarTicketScraper(IConfiguration configuration) : IWebScraper
         {
             Title = title,
             Description = title,
-            StartDateTime = gregDate,
+            StartDateTime = utcDate,
             City = context.City,
             Location = loc,
             Address = address,
-            Category = "Concert",
-            TicketPrice = priceRange,
-            Latitude = float.Parse(latitude),
-            Longitude = float.Parse(longtitude),
+            Category = "کنسرت",
+            TicketPrice = prices,
+            Latitude = latitude,
+            Longtitude = longtitude,
             CoverImage = filePath,
             CardImage = context.CardImage,
             Url = url
@@ -175,6 +185,24 @@ public class HonarTicketScraper(IConfiguration configuration) : IWebScraper
             text = text.Replace(persian[j], j.ToString());
 
         return text;
+    }
+
+    private static List<int> ExtractNumbersFromText(string text)
+    {
+        string pattern = @"\d+";
+
+        MatchCollection matches = Regex.Matches(text, pattern);
+
+        List<int> numbers = [];
+        foreach (Match match in matches.Cast<Match>())
+        {
+            if (int.TryParse(match.Value, out int number))
+            {
+                numbers.Add(number);
+            }
+        }
+
+        return numbers;
     }
 
 }

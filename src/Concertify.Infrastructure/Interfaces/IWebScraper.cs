@@ -5,7 +5,7 @@ namespace Concertify.Infrastructure.Interfaces;
 
 public interface IWebScraper
 {
-    public Task<List<Concert>> ExtractLinks(string url);
+    public IAsyncEnumerable<Concert> ExtractLinks(string url);
     public Task<Concert> Scrape(ScraperContext context);
 
 }
