@@ -34,8 +34,8 @@ public class ConcertService(IGenericRepository<Concert> concertRepository, IMapp
             c => concertFilterDto.EndRange == null || DateTime.Compare(c.StartDateTime, concertFilterDto.EndRange.Value) <= 0,
             c => concertFilterDto.City == null || (c.City != null && c.City.StartsWith(concertFilterDto.City)),
             c => concertFilterDto.Category == null || c.Category.StartsWith(concertFilterDto.Category),
-            c => concertFilterDto.TicketPriceRangeStart == null || c.TicketPrice.Contains(concertFilterDto.TicketPriceRangeStart),
-            c => concertFilterDto.TicketPriceRangeEnd == null || c.TicketPrice.Contains(concertFilterDto.TicketPriceRangeEnd)
+            c => concertFilterDto.TicketPriceRangeStart == null || c.TicketPrice.Contains(concertFilterDto.TicketPriceRangeStart.Value),
+            c => concertFilterDto.TicketPriceRangeEnd == null || c.TicketPrice.Contains(concertFilterDto.TicketPriceRangeEnd.Value)
         ];
 
         List<Concert> concerts = await _concertRepository.GetFilteredAsync(filters, concertFilterDto.Skip, concertFilterDto.Take);
