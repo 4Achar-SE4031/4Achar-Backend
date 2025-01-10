@@ -3,42 +3,53 @@ using Concertify.Domain.Dtos.Concert;
 using Concertify.Domain.Exceptions;
 using Concertify.Domain.Interfaces;
 
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+
+namespace Concertify.API.Tests;
 
 public class ConcertControllerTests
 {
     private readonly Mock<IConcertService> _mockConcertService;
     private readonly ConcertController _controller;
-
+    private readonly Mock<IWebHostEnvironment> _webHostEnvironment;
     public ConcertControllerTests()
     {
         _mockConcertService = new Mock<IConcertService>();
-        _controller = new ConcertController(_mockConcertService.Object);
+        _webHostEnvironment = new Mock<IWebHostEnvironment>();
+
+        _controller = new ConcertController(_mockConcertService.Object, _webHostEnvironment.Object);
     }
 
     [Fact]
     public async Task GetConcertsAsync_ReturnsOkResult_WithListOfConcerts()
     {
         var concertFilter = new ConcertFilterDto();
-        var concerts = new List<ConcertSummaryDto> { 
-            new() { 
-                Id = 1, 
-                Title = "Concert1",
-                StartDate = "دوشنبه 19 آذر",
-                City = "تهران",
-                Category = "کنسرت"
-            },
-            new()
-            {
-                Id = 2,
-                Title = "Concert2",
-                StartDate = "چهارشنبه 23 اسفند",
-                City = "مشهد",
-                Category = "کنسرت"
+        var concerts = new List<ConcertSummaryDto> {
+        new() {
+            Id = 1,
+            Title = "Concert1",
+            StartDateTime = DateTime.Now,
+            City = "تهران",
+            Category = "کنسرت"
+        },
+        new()
+        {
+            Id = 2,
+            Title = "Concert2",
+            StartDateTime = DateTime.Now,
+            City = "مشهد",
+            Category = "کنسرت"
 
-            }
+        }
+    };
+
+        var returnValue = new ConcertListDto()
+        {
+            Concerts = concerts,
+            TotalCount = concerts.Count
         };
-        _mockConcertService.Setup(service => service.GetConcertsAsync(concertFilter)).ReturnsAsync(concerts);
+        _mockConcertService.Setup(service => service.GetConcertsAsync(concertFilter)).ReturnsAsync(returnValue);
 
         var result = await _controller.GetConcertsAsync(concertFilter);
 
@@ -50,7 +61,7 @@ public class ConcertControllerTests
     public async Task GetConcertsAsync_ReturnsOkResult_WithEmptyList()
     {
         var concertFilter = new ConcertFilterDto();
-        var concerts = new List<ConcertSummaryDto>();
+        var concerts = new ConcertListDto();
         _mockConcertService.Setup(service => service.GetConcertsAsync(concertFilter)).ReturnsAsync(concerts);
 
         var result = await _controller.GetConcertsAsync(concertFilter);
@@ -88,34 +99,34 @@ public class ConcertControllerTests
     public async Task SearchAsync_ReturnsOkResult_WithListOfConcerts()
     {
         string searchTerm = "ناصر";
-        var concertSearch = new ConcertSearchDto() { SearchTerm = searchTerm};
+        var concertSearch = new ConcertSearchDto() { SearchTerm = searchTerm };
         var concerts = new List<ConcertSummaryDto> {
-            new() {
-                Id = 1,
-                Title = "ناصر عبداللهی",
-                StartDate = "دوشنبه 19 آذر",
-                City = "تهران",
-                Category = "کنسرت"
-            },
-            new()
-            {
-                Id = 2,
-                Title = "ناصر یداللهی",
-                StartDate = "چهارشنبه 23 اسفند",
-                City = "مشهد",
-                Category = "کنسرت"
+        new() {
+            Id = 1,
+            Title = "ناصر عبداللهی",
+            StartDateTime = DateTime.Now,
+            City = "تهران",
+            Category = "کنسرت"
+        },
+        new()
+        {
+            Id = 2,
+            Title = "ناصر یداللهی",
+            StartDateTime = DateTime.Now,
+            City = "مشهد",
+            Category = "کنسرت"
 
-            },
-            new()
-            {
-                Id = 3,
-                Title = "صابر فضل الهی",
-                StartDate = "سه شنبه 22 اسفند",
-                City = "اصفهان",
-                Category = "کنسرت"
+        },
+        new()
+        {
+            Id = 3,
+            Title = "صابر فضل الهی",
+            StartDateTime = DateTime.Now,
+            City = "اصفهان",
+            Category = "کنسرت"
 
-            },
-        };
+        },
+    };
         _mockConcertService.Setup(service => service.SearchAsync(concertSearch)).ReturnsAsync(concerts[0..2]);
 
         var result = await _controller.SearchAsync(concertSearch);
