@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using System.Reflection.Metadata.Ecma335;
 
 using Concertify.Domain.Interfaces;
 using Concertify.Domain.Models;
@@ -35,16 +36,6 @@ public class GenericRepository<T> : IGenericRepository<T> where T : EntityBase
             query = query.Include(include);
         }
 
-        if (skip.HasValue)
-        {
-            query = query.Skip(skip.Value);
-        }
-
-        if (take.HasValue)
-        {
-            query = query.Take(take.Value);
-        }
-
         return await query.ToListAsync();
 
     }
@@ -56,16 +47,6 @@ public class GenericRepository<T> : IGenericRepository<T> where T : EntityBase
         foreach (var include in includes)
         {
             query = query.Include(include);
-        }
-
-        if (skip.HasValue)
-        {
-            query = query.Skip(skip.Value);
-        }
-
-        if (take.HasValue)
-        {
-            query = query.Take(take.Value);
         }
 
         return await query.ToListAsync();

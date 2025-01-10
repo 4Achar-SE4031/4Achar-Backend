@@ -7,6 +7,8 @@ using Concertify.Domain.Exceptions;
 using Concertify.Domain.Interfaces;
 using Concertify.Domain.Models;
 
+using Microsoft.EntityFrameworkCore;
+
 namespace Concertify.Application.Services;
 
 public class ConcertService(IGenericRepository<Concert> concertRepository, IMapper mapper) : IConcertService
@@ -25,7 +27,7 @@ public class ConcertService(IGenericRepository<Concert> concertRepository, IMapp
 
     }
 
-    public async Task<List<ConcertSummaryDto>> GetConcertsAsync(ConcertFilterDto concertFilterDto)
+    public async Task<ConcertListDto> GetConcertsAsync(ConcertFilterDto concertFilterDto)
     {
         Expression<Func<Concert, bool>>[] filters =
         [
@@ -39,11 +41,22 @@ public class ConcertService(IGenericRepository<Concert> concertRepository, IMapp
         ];
 
         List<Concert> concerts = await _concertRepository.GetFilteredAsync(filters, concertFilterDto.Skip, concertFilterDto.Take);
+        
+        int totalCount = concerts.Count;
+
+        if (concertFilterDto.Skip.HasValue)
+            concerts = concerts.Skip(concertFilterDto.Skip.Value).ToList();
+        if (concertFilterDto.Take.HasValue)
+            concerts = concerts.Take(concertFilterDto.Take.Value).ToList();
 
         List<ConcertSummaryDto> concertDtos = _mapper.Map<List<ConcertSummaryDto>>(concerts);
 
-        return concertDtos;
-    }
+        return new ConcertListDto()
+        {
+            Concerts = concertDtos,
+            TotalCount = totalCount
+        };
+    }   
 
     public async Task<List<ConcertSummaryDto>> SearchAsync(ConcertSearchDto concertSearch)
     {

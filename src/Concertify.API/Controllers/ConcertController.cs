@@ -16,14 +16,10 @@ public class ConcertController(IConcertService concertService, IWebHostEnvironme
     [Produces(typeof(List<ConcertSummaryDto>))]
     public async Task<IActionResult> GetConcertsAsync([FromQuery] ConcertFilterDto concertFilter)
     {
-        List<ConcertSummaryDto> concerts = await _concertService.GetConcertsAsync(concertFilter);
-        concerts.ForEach(c => c.CardImage = $"{Request.Scheme}://{Request.Host}{c.CardImage.Replace(_webHostEnvironment.WebRootPath, "")}");
+        ConcertListDto concertList = await _concertService.GetConcertsAsync(concertFilter);
+        concertList.Concerts.ForEach(c => c.CardImage = $"{Request.Scheme}://{Request.Host}{c.CardImage.Replace(_webHostEnvironment.WebRootPath, "")}");
 
-        return Ok(new
-        {
-            count = concerts.Count,
-            data = concerts
-        });
+        return Ok(concertList);
     }
 
     [HttpGet]
@@ -37,10 +33,10 @@ public class ConcertController(IConcertService concertService, IWebHostEnvironme
         return Ok(concert);
     }
 
-    [HttpPost]
+    [HttpGet]
     [Route("search")]
     [Produces(typeof(List<ConcertSummaryDto>))]
-    public async Task<IActionResult> SearchAsync(ConcertSearchDto concertSearch)
+    public async Task<IActionResult> SearchAsync([FromQuery] ConcertSearchDto concertSearch)
     {
         List<ConcertSummaryDto> concerts = await _concertService.SearchAsync(concertSearch);
         concerts.ForEach(c => c.CardImage = $"{Request.Scheme}://{Request.Host}{c.CardImage.Replace(_webHostEnvironment.WebRootPath, "")}");
