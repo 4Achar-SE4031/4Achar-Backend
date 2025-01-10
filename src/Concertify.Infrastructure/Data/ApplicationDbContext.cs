@@ -1,4 +1,7 @@
-﻿using Concertify.Domain.Models;
+﻿using System.Reflection.Emit;
+using System;
+
+using Concertify.Domain.Models;
 
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -24,5 +27,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         base.OnModelCreating(builder);
 
         builder.Entity<Concert>().HasKey(e => e.Id);
+        builder.Entity<Concert>()
+            .Property(c => c.StartDateTime)
+            .HasConversion(
+                src => src.Kind == DateTimeKind.Utc ? src : DateTime.SpecifyKind(src, DateTimeKind.Utc),
+                dest => dest.Kind == DateTimeKind.Utc ? dest : DateTime.SpecifyKind(dest, DateTimeKind.Utc)
+            );
+        
     }
 }
