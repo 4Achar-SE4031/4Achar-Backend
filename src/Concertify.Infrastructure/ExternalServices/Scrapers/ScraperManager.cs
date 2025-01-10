@@ -10,12 +10,14 @@ public class ScraperManager(IWebScraper scraper, ApplicationDbContext context) :
     private readonly IWebScraper _scraper = scraper;
     private readonly ApplicationDbContext _context = context;
 
-    public async Task<List<Concert>> StartScraping(string url)
+    public async IAsyncEnumerable<Concert> StartScraping(string url)
     {
-        List<Concert> scrapedConcerts = await _scraper.ExtractLinks(url);
+        await foreach (var concert in _scraper.ExtractLinks(url))
+        {
+            await _context.Concerts.AddAsync(concert);
+            await _context.SaveChangesAsync();
+            yield return concert;
 
-        await _context.Concerts.AddRangeAsync(scrapedConcerts);
-
-        return scrapedConcerts;
+        }
     }
 }

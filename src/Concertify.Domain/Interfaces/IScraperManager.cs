@@ -4,5 +4,5 @@ namespace Concertify.Domain.Interfaces;
 
 public interface IScraperManager
 {
-    public Task<List<Concert>> StartScraping(string url);
+    public IAsyncEnumerable<Concert> StartScraping(string url);
 }
