@@ -16,7 +16,7 @@ public class ScraperService(IScraperManager scraperManager, IMapper mapper) : IS
     public async IAsyncEnumerable<ConcertSummaryDto> Collect()
     {
         Console.OutputEncoding = Encoding.UTF8;
-        string url = "https://www.honarticket.com/#concerts-tehran";
+        string url = "https://www.honarticket.com";
 
         //List<ConcertSummaryDto> concerts = [];
         await foreach (var concert in _scraperManager.StartScraping(url))
