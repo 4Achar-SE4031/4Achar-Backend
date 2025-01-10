@@ -8,8 +8,8 @@ public record ConcertFilterDto
     public string? Province { get; set; }
     public string? City { get; set; }
     public string? Category { get; set; }
-    public string? TicketPriceRangeStart { get; set; }
-    public string? TicketPriceRangeEnd { get; set; }
+    public int? TicketPriceRangeStart { get; set; }
+    public int? TicketPriceRangeEnd { get; set; }
 
     public int? Skip { get; set; }
     public int? Take { get; set; }
