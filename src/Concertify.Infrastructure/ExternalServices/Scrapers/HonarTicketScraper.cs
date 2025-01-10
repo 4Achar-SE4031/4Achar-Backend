@@ -33,7 +33,8 @@ public class HonarTicketScraper(IConfiguration configuration) : IWebScraper
 
         foreach (var node in nodes)
         {
-            var inners = node.SelectNodes(urlPath + "//a[starts-with(@id, \"item-\")]");
+            var id = node.GetAttributeValue("id", "");
+            var inners = node.SelectNodes($"//div[@id = \"{id}\"]" + "//a[starts-with(@id, \"item-\")]");
             foreach (var i in inners)
             {
                 if (i.Elements("div")
