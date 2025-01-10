@@ -164,7 +164,6 @@ namespace Concertify.API
             {
                 var dbContext = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 dbContext.Database.EnsureCreated();
-                dbContext.Database.Migrate();
             }
 
             app.UseMiddleware<ExceptionMiddleware>();
