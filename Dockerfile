@@ -25,6 +25,18 @@ COPY "./src/" .
 WORKDIR "/src/Concertify.API"
 RUN dotnet build "./Concertify.API.csproj" -c Release -o /app/build
 
+FROM build AS develop
+EXPOSE 80
+EXPOSE 443
+
+USER root
+
+COPY ["./aspnetapp.pfx", "/https/"]
+
+RUN chmod 777 /src/Concertify.API/wwwroot
+
+CMD dotnet run --no-launch-profile
+
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 USER root
@@ -39,8 +51,9 @@ COPY --from=publish /app/publish .
 COPY ["./aspnetapp.pfx", "/https/"]
 USER root
 
-RUN mkdir /app/images
-RUN chmod 777 /app/images
+
+COPY ./src/Concertify.API/wwwroot ./wwwroot
+RUN chmod -R 777 /app/wwwroot
 
 USER app
 ENTRYPOINT ["dotnet", "Concertify.API.dll"]
