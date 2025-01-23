@@ -14,6 +14,6 @@ public class Concert : EntityBase
     public float Longtitude { get; set; } = default!;
     public string CoverImage { get; set;} = default!;
     public string CardImage { get; set; } = default!;
-    public string Url { get; set; } = default!;
-
+    public string Url { get; set; } = default!; 
+    public ICollection<Comment> Comments { get; set; } = new List<Comment>();
 }
