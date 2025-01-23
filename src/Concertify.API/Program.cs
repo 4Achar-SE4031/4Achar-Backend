@@ -5,6 +5,7 @@ using Concertify.API.Middlewares;
 using Concertify.Application;
 using Concertify.Application.Services;
 using Concertify.Domain.Models;
+using Concertify.Domain.Interfaces;
 using Concertify.Infrastructure.Data;
 
 using DotNetEnv;
@@ -25,7 +26,7 @@ namespace Concertify.API
     {
         public static void Main(string[] args)
         {
-            Env.Load();
+            Env.Load("DevEnv.env");
 
             var MyAllowSpecificOrigins = "_myAllowSpecificOrigin";
 
@@ -63,8 +64,11 @@ namespace Concertify.API
                 options.User.RequireUniqueEmail = true;
                 options.Tokens.ProviderMap.Add("CustomTotpProvider", new TokenProviderDescriptor(typeof(CustomTotpTokenProvider<ApplicationUser>)));
             })
+            
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
+            // Program.cs
+            builder.Services.AddScoped<ICommentService, CommentService>();
 
             builder.Services.AddTransient<CustomTotpTokenProvider<ApplicationUser>>();
 
@@ -164,6 +168,7 @@ namespace Concertify.API
             {
                 var dbContext = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 dbContext.Database.EnsureCreated();
+                // dbContext.Database.Migrate();
             }
 
             app.UseMiddleware<ExceptionMiddleware>();
@@ -176,8 +181,8 @@ namespace Concertify.API
 
             app.UseCors(MyAllowSpecificOrigins);
 
-            app.UseAuthorization();
             app.UseAuthentication();
+            app.UseAuthorization();
 
             app.MapControllers();
             app.UseStaticFiles();
