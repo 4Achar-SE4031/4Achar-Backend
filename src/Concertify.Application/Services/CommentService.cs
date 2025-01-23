@@ -26,23 +26,18 @@ namespace Concertify.Application.Services
                 .Include(c => c.LikedBy)
                 .Include(c => c.Replies)
                     .ThenInclude(r => r.LikedBy)
+                .Include(c => c.Parent)  // Ensure Parent is loaded here
+                .ThenInclude(p => p.User)  // Ensure Parent's User is loaded
                 .Where(c => c.EventId == eventId)
                 .AsNoTracking()
                 .ToListAsync();
 
-            // var topLevelComments = allComments
-            //     .Where(c => c.ParentId == null)
-            //     .OrderBy(c => c.CreatedAt)
-            //     .Select(c => MapCommentToDto(c, currentUserId, allComments))
-            //     .ToList();
-
-            // return topLevelComments;
-               var flatComments = allComments
+            var flatComments = allComments
                 .OrderBy(c => c.CreatedAt)
                 .Select(c => MapCommentToDto(c, currentUserId, allComments))
                 .ToList();
-                
-                return flatComments;
+
+            return flatComments;
         }
 
         public async Task<CommentDto> CreateCommentAsync(CreateCommentDto dto, string currentUserId)
@@ -139,6 +134,7 @@ namespace Concertify.Application.Services
         private CommentDto MapCommentToDto(Comment comment, string currentUserId, List<Comment> allComments = null)
         {
             string? replyingToName = null;
+
             if (comment.Parent != null && comment.Parent.User != null)
             {
                 replyingToName = comment.Parent.User.UserName;
@@ -156,26 +152,13 @@ namespace Concertify.Application.Services
                 EventId = comment.EventId,
                 HasLiked = comment.LikedBy.Any(u => u.Id == currentUserId),
 
+                // Flat structure fields:
+                ReplyingTo = comment.ParentId,
+                ReplyingToName = replyingToName,
+
                 // We'll keep Replies but leave it empty for a flat structure
-                Replies = new List<CommentDto>(),
-
-               // Flat structure fields:
-               ReplyingTo = comment.ParentId,
-               ReplyingToName = replyingToName
+                Replies = new List<CommentDto>()
             };
-
-            // if (allComments != null)
-            // {
-            //     var children = allComments
-            //         .Where(c => c.ParentId == comment.Id)
-            //         .OrderBy(c => c.CreatedAt)
-            //         .ToList();
-
-            //     foreach (var child in children)
-            //     {
-            //         dto.Replies.Add(MapCommentToDto(child, currentUserId, allComments));
-            //     }
-            // }
 
             return dto;
         }
