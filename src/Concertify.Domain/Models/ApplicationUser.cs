@@ -11,4 +11,6 @@ public class ApplicationUser : IdentityUser
     public override string? UserName { get; set; } = default!;
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
+    public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+
 }
