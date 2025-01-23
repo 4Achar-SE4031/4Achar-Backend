@@ -11,18 +11,24 @@ namespace Concertify.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<List<int>>(
+            migrationBuilder.Sql(
+                "ALTER TABLE \"Concerts\" ALTER COLUMN \"TicketPrice\" TYPE integer[] USING string_to_array(\"TicketPrice\", ',')::integer[];"
+            );            migrationBuilder.AlterColumn<List<int>>(
                 name: "TicketPrice",
                 table: "Concerts",
                 type: "integer[]",
                 nullable: false,
                 oldClrType: typeof(string),
                 oldType: "text");
+
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.Sql(
+                "ALTER TABLE \"Concerts\" ALTER COLUMN \"TicketPrice\" TYPE text USING array_to_string(\"TicketPrice\", ',');"
+            );
             migrationBuilder.AlterColumn<string>(
                 name: "TicketPrice",
                 table: "Concerts",
