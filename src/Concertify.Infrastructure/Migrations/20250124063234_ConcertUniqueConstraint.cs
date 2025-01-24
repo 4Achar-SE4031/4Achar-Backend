@@ -5,24 +5,24 @@
 namespace Concertify.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class FixTypoInConcertModel : Migration
+    public partial class ConcertUniqueConstraint : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameColumn(
-                name: "Longitude",
+            migrationBuilder.CreateIndex(
+                name: "IX_Concerts_Title_StartDateTime_City",
                 table: "Concerts",
-                newName: "Longtitude");
+                columns: new[] { "Title", "StartDateTime", "City" },
+                unique: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameColumn(
-                name: "Longtitude",
-                table: "Concerts",
-                newName: "Longitude");
+            migrationBuilder.DropIndex(
+                name: "IX_Concerts_Title_StartDateTime_City",
+                table: "Concerts");
         }
     }
 }

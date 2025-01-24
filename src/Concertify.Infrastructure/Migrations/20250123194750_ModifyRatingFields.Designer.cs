@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Concertify.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250109153058_ConcertPriceType")]
-    partial class ConcertPriceType
+    [Migration("20250123194750_ModifyRatingFields")]
+    partial class ModifyRatingFields
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -134,7 +134,7 @@ namespace Concertify.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<float>("Longitude")
+                    b.Property<float>("Longtitude")
                         .HasColumnType("real");
 
                     b.Property<DateTime>("StartDateTime")
@@ -155,6 +155,33 @@ namespace Concertify.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Concerts");
+                });
+
+            modelBuilder.Entity("Concertify.Domain.Models.Rating", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ConcertId")
+                        .HasColumnType("integer");
+
+                    b.Property<float>("Stars")
+                        .HasColumnType("real");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConcertId");
+
+                    b.HasIndex("UserId", "ConcertId")
+                        .IsUnique();
+
+                    b.ToTable("Ratings");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -287,6 +314,19 @@ namespace Concertify.Infrastructure.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("Concertify.Domain.Models.Rating", b =>
+                {
+                    b.HasOne("Concertify.Domain.Models.Concert", null)
+                        .WithMany()
+                        .HasForeignKey("ConcertId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Concertify.Domain.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
