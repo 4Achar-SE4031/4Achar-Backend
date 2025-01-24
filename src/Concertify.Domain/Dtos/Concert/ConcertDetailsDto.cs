@@ -15,4 +15,6 @@ public record ConcertDetailsDto
     public float Longtitude { get; set; } = default!;
     public string CoverImage { get; set; } = default!;
     public string Url { get; set; } = default!;
+    public float AverageRating { get; set; } = default!;
+    public float? UserRating { get; set; }
 }

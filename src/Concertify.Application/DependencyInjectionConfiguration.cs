@@ -21,7 +21,8 @@ public class DependencyInjectionConfiguration
         services.AddScoped<IEmailSender, EmailSender>();
         services.AddScoped<IConcertService, ConcertService>();
         services.AddScoped<IGenericRepository<Concert>, GenericRepository<Concert>>();
-        
+        services.AddScoped<IGenericRepository<Rating>, GenericRepository<Rating>>();
+
         services.AddScoped<IScraperService, ScraperService>();
         services.AddScoped<IWebScraper, HonarTicketScraper>();
         services.AddScoped<IScraperManager, ScraperManager>();
