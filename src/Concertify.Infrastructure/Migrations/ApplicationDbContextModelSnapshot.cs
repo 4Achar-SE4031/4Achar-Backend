@@ -363,19 +363,6 @@ namespace Concertify.Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Concertify.Domain.Models.Rating", b =>
-                {
-                    b.HasOne("Concertify.Domain.Models.Concert", null)
-                        .WithMany()
-                        .HasForeignKey("ConcertId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Concertify.Domain.Models.ApplicationUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId");
-                });
-
             modelBuilder.Entity("Concertify.Domain.Models.ApplicationUser", b =>
                 {
                     b.HasOne("Concertify.Domain.Models.Comment", null)
@@ -406,6 +393,19 @@ namespace Concertify.Infrastructure.Migrations
                     b.Navigation("Parent");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Concertify.Domain.Models.Rating", b =>
+                {
+                    b.HasOne("Concertify.Domain.Models.Concert", null)
+                        .WithMany()
+                        .HasForeignKey("ConcertId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Concertify.Domain.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
