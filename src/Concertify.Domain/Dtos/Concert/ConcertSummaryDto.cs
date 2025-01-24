@@ -10,5 +10,6 @@ public record ConcertSummaryDto
     public string Location { get; set; } = default!;
     public string Category { get; set; } = default!;
     public string CardImage { get; set; } = default!;
+    public float AverageRating { get; set; } = default!;
 
 }
