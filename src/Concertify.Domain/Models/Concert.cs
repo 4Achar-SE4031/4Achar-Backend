@@ -16,4 +16,6 @@ public class Concert : EntityBase
     public string CardImage { get; set; } = default!;
     public string Url { get; set; } = default!;
 
+    public List<ApplicationUser> Ratings { get; set; } = [];
+    public float AverageRating { get; set; } = default!;
 }
