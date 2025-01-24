@@ -26,7 +26,7 @@ namespace Concertify.API
     {
         public static void Main(string[] args)
         {
-            Env.Load("DevEnv.env");
+            Env.Load();
 
             var MyAllowSpecificOrigins = "_myAllowSpecificOrigin";
 

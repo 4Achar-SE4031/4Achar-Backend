@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Concertify.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -45,7 +45,8 @@ namespace Concertify.Infrastructure.Migrations
                     Longtitude = table.Column<float>(type: "real", nullable: false),
                     CoverImage = table.Column<string>(type: "text", nullable: false),
                     CardImage = table.Column<string>(type: "text", nullable: false),
-                    Url = table.Column<string>(type: "text", nullable: false)
+                    Url = table.Column<string>(type: "text", nullable: false),
+                    AverageRating = table.Column<float>(type: "real", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -203,6 +204,32 @@ namespace Concertify.Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Ratings",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<string>(type: "text", nullable: true),
+                    ConcertId = table.Column<int>(type: "integer", nullable: false),
+                    Stars = table.Column<float>(type: "real", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Ratings", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Ratings_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Ratings_Concerts_ConcertId",
+                        column: x => x.ConcertId,
+                        principalTable: "Concerts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -260,6 +287,23 @@ namespace Concertify.Infrastructure.Migrations
                 table: "Comments",
                 column: "UserId");
 
+            migrationBuilder.CreateIndex(
+                name: "IX_Concerts_Title_StartDateTime_City",
+                table: "Concerts",
+                columns: new[] { "Title", "StartDateTime", "City" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Ratings_ConcertId",
+                table: "Ratings",
+                column: "ConcertId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Ratings_UserId_ConcertId",
+                table: "Ratings",
+                columns: new[] { "UserId", "ConcertId" },
+                unique: true);
+
             migrationBuilder.AddForeignKey(
                 name: "FK_AspNetUserClaims_AspNetUsers_UserId",
                 table: "AspNetUserClaims",
@@ -313,6 +357,9 @@ namespace Concertify.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUserTokens");
+
+            migrationBuilder.DropTable(
+                name: "Ratings");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

@@ -1,10 +1,17 @@
-﻿using Concertify.API.Controllers;
+﻿using System.Net.Http;
+using System.Security.Claims;
+using System.Text;
+
+using Concertify.API.Controllers;
 using Concertify.Domain.Dtos.Concert;
 using Concertify.Domain.Exceptions;
 using Concertify.Domain.Interfaces;
+using Concertify.Domain.Models;
 
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.FileProviders;
 
 namespace Concertify.API.Tests;
 
@@ -18,7 +25,35 @@ public class ConcertControllerTests
         _mockConcertService = new Mock<IConcertService>();
         _webHostEnvironment = new Mock<IWebHostEnvironment>();
 
+        _webHostEnvironment.Setup(w => w.WebRootFileProvider).Returns(new Mock<IFileProvider>().Object);
+        _webHostEnvironment.Setup(w => w.WebRootPath).Returns("Concertify.API\\wwwroot");
+
         _controller = new ConcertController(_mockConcertService.Object, _webHostEnvironment.Object);
+
+        var userClaims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, "123"), 
+            new Claim(ClaimTypes.Name, "TestUser"),      
+            new Claim(ClaimTypes.Email, "test@example.com") 
+        };
+        var identity = new ClaimsIdentity(userClaims, "TestAuth");
+        var user = new ClaimsPrincipal(identity);
+
+        var httpContext = new DefaultHttpContext
+        {
+            User = user
+        };
+
+        httpContext.Request.Path = "/api/concert/test";
+        httpContext.Request.Scheme = "http";
+        httpContext.Request.Host = HostString.FromUriComponent("www.testconcertify.com");
+        httpContext.Request.ContentType = "application/json";
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = httpContext
+        };
+
     }
 
     [Fact]
@@ -26,23 +61,25 @@ public class ConcertControllerTests
     {
         var concertFilter = new ConcertFilterDto();
         var concerts = new List<ConcertSummaryDto> {
-        new() {
-            Id = 1,
-            Title = "Concert1",
-            StartDateTime = DateTime.Now,
-            City = "تهران",
-            Category = "کنسرت"
-        },
-        new()
-        {
-            Id = 2,
-            Title = "Concert2",
-            StartDateTime = DateTime.Now,
-            City = "مشهد",
-            Category = "کنسرت"
-
-        }
-    };
+            new()
+            {
+                Id = 1,
+                Title = "Concert1",
+                StartDateTime = DateTime.Now,
+                City = "تهران",
+                Category = "کنسرت",
+                CardImage = _webHostEnvironment.Object.WebRootPath + "images/concerts"
+            },
+            new()
+            {
+                Id = 2,
+                Title = "Concert2",
+                StartDateTime = DateTime.Now,
+                City = "مشهد",
+                Category = "کنسرت",
+                CardImage = _webHostEnvironment.Object.WebRootPath + "images/concerts"
+            }
+        };
 
         var returnValue = new ConcertListDto()
         {
@@ -54,29 +91,38 @@ public class ConcertControllerTests
         var result = await _controller.GetConcertsAsync(concertFilter);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnedConcerts = Assert.IsType<List<ConcertSummaryDto>>(okResult.Value);
+        var returnedConcerts = Assert.IsType<ConcertListDto>(okResult.Value);
     }
 
     [Fact]
     public async Task GetConcertsAsync_ReturnsOkResult_WithEmptyList()
     {
         var concertFilter = new ConcertFilterDto();
-        var concerts = new ConcertListDto();
+        var concertDtos = new List<ConcertSummaryDto>();
+        var concerts = new ConcertListDto()
+        {
+            TotalCount = 0,
+            Concerts = concertDtos
+        };
         _mockConcertService.Setup(service => service.GetConcertsAsync(concertFilter)).ReturnsAsync(concerts);
 
         var result = await _controller.GetConcertsAsync(concertFilter);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnedConcerts = Assert.IsType<List<ConcertSummaryDto>>(okResult.Value);
-        Assert.Empty(returnedConcerts);
+        var returnedConcerts = Assert.IsType<ConcertListDto>(okResult.Value);
+        Assert.Empty(returnedConcerts.Concerts);
     }
 
     [Fact]
     public async Task GetConcertByIdAsync_ReturnsOkResult_WithConcertDetails()
     {
         int concertId = 1;
-        var concert = new ConcertDetailsDto { Id = concertId, Title = "Concert1" };
-        _mockConcertService.Setup(service => service.GetConcertByIdAsync(concertId)).ReturnsAsync(concert);
+        var concert = new ConcertDetailsDto { Id = concertId, Title = "Concert1", CoverImage = _webHostEnvironment.Object.WebRootPath + "images/concerts" };
+        string? userId = _controller.User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? null;
+
+
+        _mockConcertService.Setup(service => service.GetConcertByIdAsync(concertId, userId)).ReturnsAsync(concert);
 
         var result = await _controller.GetConcertByIdAsync(concertId);
 
@@ -89,9 +135,11 @@ public class ConcertControllerTests
     public async Task GetConcertByIdAsync_ReturnsNotFoundResult_WhenConcertDoesNotExist()
     {
         int concertId = 1;
-        _mockConcertService.Setup(service => service.GetConcertByIdAsync(concertId)).Throws(new ItemNotFoundException(concertId));
+        string? userId = _controller.User?.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? null;
+        _mockConcertService.Setup(service => service.GetConcertByIdAsync(concertId, userId)).Throws(new ItemNotFoundException(concertId));
 
-        var ex = await Assert.ThrowsAsync<ItemNotFoundException>(() => _mockConcertService.Object.GetConcertByIdAsync(concertId));
+        var ex = await Assert.ThrowsAsync<ItemNotFoundException>(() => _mockConcertService.Object.GetConcertByIdAsync(concertId, userId));
         Assert.Equal(typeof(ItemNotFoundException), ex.GetType());
     }
 
@@ -106,7 +154,8 @@ public class ConcertControllerTests
             Title = "ناصر عبداللهی",
             StartDateTime = DateTime.Now,
             City = "تهران",
-            Category = "کنسرت"
+            Category = "کنسرت",
+            CardImage = _webHostEnvironment.Object.WebRootPath + "images/concerts"
         },
         new()
         {
@@ -114,7 +163,8 @@ public class ConcertControllerTests
             Title = "ناصر یداللهی",
             StartDateTime = DateTime.Now,
             City = "مشهد",
-            Category = "کنسرت"
+            Category = "کنسرت",
+            CardImage = _webHostEnvironment.Object.WebRootPath + "images/concerts"
 
         },
         new()
@@ -123,7 +173,8 @@ public class ConcertControllerTests
             Title = "صابر فضل الهی",
             StartDateTime = DateTime.Now,
             City = "اصفهان",
-            Category = "کنسرت"
+            Category = "کنسرت",
+            CardImage = _webHostEnvironment.Object.WebRootPath + "images/concerts"
 
         },
     };

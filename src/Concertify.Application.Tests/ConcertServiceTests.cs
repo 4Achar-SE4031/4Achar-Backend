@@ -15,14 +15,16 @@ namespace Concertify.Application.Tests;
 public class ConcertServiceTests
 {
     private readonly Mock<IGenericRepository<Concert>> _concertRepositoryMock;
+    private readonly Mock<IGenericRepository<Rating>> _ratingRepositoryMock;
     private readonly Mock<IMapper> _mapperMock;
     private readonly ConcertService _concertService;
 
     public ConcertServiceTests()
     {
         _concertRepositoryMock = new Mock<IGenericRepository<Concert>>();
+        _ratingRepositoryMock = new Mock<IGenericRepository<Rating>>();
         _mapperMock = new Mock<IMapper>();
-        _concertService = new ConcertService(_concertRepositoryMock.Object, _mapperMock.Object);
+        _concertService = new ConcertService(_concertRepositoryMock.Object, _ratingRepositoryMock.Object, _mapperMock.Object);
     }
 
     [Fact]
@@ -30,13 +32,15 @@ public class ConcertServiceTests
     {
         // Arrange
         int concertId = 1;
-        var concertEntity = new Concert { Id = concertId, Title = "Concert A" };
+        Mock<ApplicationUser> user = new();
+        string userId = user.Object.Id;
+        var concertObject = new Concert { Id = concertId, Title = "Concert A" };
         var concertDto = new ConcertDetailsDto { Id = concertId, Title = "Concert A" };
-        _concertRepositoryMock.Setup(r => r.GetByIdAsync(concertId)).ReturnsAsync(concertEntity);
-        _mapperMock.Setup(m => m.Map<ConcertDetailsDto>(concertEntity)).Returns(concertDto);
+        _concertRepositoryMock.Setup(r => r.GetByIdAsync(concertId, c => c.Ratings)).ReturnsAsync(concertObject);
+        _mapperMock.Setup(m => m.Map<ConcertDetailsDto>(concertObject)).Returns(concertDto);
 
         // Act
-        var result = await _concertService.GetConcertByIdAsync(concertId);
+        var result = await _concertService.GetConcertByIdAsync(concertObject.Id, userId);
 
         // Assert
         Assert.Equal(concertId, result.Id);
@@ -48,10 +52,12 @@ public class ConcertServiceTests
     {
         // Arrange
         int concertId = 1;
+        Mock<ApplicationUser> user = new();
+        string userId = user.Object.Id;
         _concertRepositoryMock.Setup(r => r.GetByIdAsync(concertId)).ReturnsAsync((Concert)null);
 
         // Act & Assert
-        await Assert.ThrowsAsync<ItemNotFoundException>(() => _concertService.GetConcertByIdAsync(concertId));
+        await Assert.ThrowsAsync<ItemNotFoundException>(() => _concertService.GetConcertByIdAsync(concertId, userId));
     }
 
     [Fact]
@@ -70,7 +76,10 @@ public class ConcertServiceTests
             new() { Title = "Rock Night" }
         };
 
-        _concertRepositoryMock.Setup(r => r.GetFilteredAsync(It.IsAny<Expression<Func<Concert, bool>>[]>(), concertFilterDto.Skip, concertFilterDto.Take))
+        _concertRepositoryMock.Setup(r => r.GetFilteredAsync(It.IsAny<Expression<Func<Concert, bool>>[]>(), 
+            concertFilterDto.Skip, 
+            concertFilterDto.Take,
+            It.IsAny<Expression<Func<Concert, object>>[]>()))
             .ReturnsAsync(concerts);
         _mapperMock.Setup(m => m.Map<List<ConcertSummaryDto>>(concerts)).Returns(concertSummaryDtos);
 

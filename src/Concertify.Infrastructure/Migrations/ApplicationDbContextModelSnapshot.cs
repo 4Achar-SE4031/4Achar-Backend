@@ -31,6 +31,9 @@ namespace Concertify.Infrastructure.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("CommentId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("text");
@@ -83,6 +86,8 @@ namespace Concertify.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CommentId");
+
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
 
@@ -91,6 +96,45 @@ namespace Concertify.Infrastructure.Migrations
                         .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("Concertify.Domain.Models.Comment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("EventId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Score")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventId");
+
+                    b.HasIndex("ParentId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Comments");
                 });
 
             modelBuilder.Entity("Concertify.Domain.Models.Concert", b =>
@@ -319,6 +363,38 @@ namespace Concertify.Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Concertify.Domain.Models.ApplicationUser", b =>
+                {
+                    b.HasOne("Concertify.Domain.Models.Comment", null)
+                        .WithMany("LikedBy")
+                        .HasForeignKey("CommentId");
+                });
+
+            modelBuilder.Entity("Concertify.Domain.Models.Comment", b =>
+                {
+                    b.HasOne("Concertify.Domain.Models.Concert", "Event")
+                        .WithMany("Comments")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Concertify.Domain.Models.Comment", "Parent")
+                        .WithMany("Replies")
+                        .HasForeignKey("ParentId");
+
+                    b.HasOne("Concertify.Domain.Models.ApplicationUser", "User")
+                        .WithMany("Comments")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Event");
+
+                    b.Navigation("Parent");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Concertify.Domain.Models.Rating", b =>
                 {
                     b.HasOne("Concertify.Domain.Models.Concert", null)
@@ -381,6 +457,23 @@ namespace Concertify.Infrastructure.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Concertify.Domain.Models.ApplicationUser", b =>
+                {
+                    b.Navigation("Comments");
+                });
+
+            modelBuilder.Entity("Concertify.Domain.Models.Comment", b =>
+                {
+                    b.Navigation("LikedBy");
+
+                    b.Navigation("Replies");
+                });
+
+            modelBuilder.Entity("Concertify.Domain.Models.Concert", b =>
+                {
+                    b.Navigation("Comments");
                 });
 #pragma warning restore 612, 618
         }
