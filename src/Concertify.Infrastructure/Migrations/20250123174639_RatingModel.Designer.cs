@@ -13,13 +13,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Concertify.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-<<<<<<<< HEAD:src/Concertify.Infrastructure/Migrations/20250123180251_InitialCreate.Designer.cs
     [Migration("20250123180251_InitialCreate")]
     partial class InitialCreate
-========
     [Migration("20250123174639_RatingModel")]
     partial class RatingModel
->>>>>>>> feat/star-rating-system:src/Concertify.Infrastructure/Migrations/20250123174639_RatingModel.Designer.cs
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
