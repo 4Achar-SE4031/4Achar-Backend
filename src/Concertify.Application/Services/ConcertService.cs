@@ -11,18 +11,25 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Concertify.Application.Services;
 
-public class ConcertService(IGenericRepository<Concert> concertRepository, IMapper mapper) : IConcertService
+public class ConcertService(IGenericRepository<Concert> concertRepository, IGenericRepository<Rating> ratingRepository, IMapper mapper) : IConcertService
 {
     private readonly IGenericRepository<Concert> _concertRepository = concertRepository;
+    private readonly IGenericRepository<Rating> _ratingRepository = ratingRepository;
     private readonly IMapper _mapper = mapper;
 
-    public async Task<ConcertDetailsDto> GetConcertByIdAsync(int concertId)
+    public async Task<ConcertDetailsDto> GetConcertByIdAsync(int concertId, string? userId)
     {
-        Concert entity = await _concertRepository.GetByIdAsync(concertId)
+        
+        Concert entity = await _concertRepository.GetByIdAsync(concertId, c => c.Ratings)
             ?? throw new ItemNotFoundException(concertId);
 
-        ConcertDetailsDto concert = _mapper.Map<ConcertDetailsDto>(entity);
 
+        ConcertDetailsDto concert = _mapper.Map<ConcertDetailsDto>(entity);
+        if (userId != null && entity.Ratings.Any(r => r.Id == userId))
+        {
+            concert.UserRating = (await _ratingRepository.GetFilteredAsync([r => r.UserId == userId, r => r.ConcertId == concertId], null, null)).First().Stars;
+
+        }
         return concert;
 
     }
@@ -40,7 +47,9 @@ public class ConcertService(IGenericRepository<Concert> concertRepository, IMapp
             c => concertFilterDto.TicketPriceRangeEnd == null || c.TicketPrice.Contains(concertFilterDto.TicketPriceRangeEnd.Value)
         ];
 
-        List<Concert> concerts = await _concertRepository.GetFilteredAsync(filters, concertFilterDto.Skip, concertFilterDto.Take);
+        Expression<Func<Concert, object>>[] includes = [c => c.Ratings];
+
+        List<Concert> concerts = await _concertRepository.GetFilteredAsync(filters, concertFilterDto.Skip, concertFilterDto.Take, includes);
         
         int totalCount = concerts.Count;
 
@@ -69,5 +78,46 @@ public class ConcertService(IGenericRepository<Concert> concertRepository, IMapp
         List<ConcertSummaryDto> concertDtos = _mapper.Map<List<ConcertSummaryDto>>(concerts);
 
         return concertDtos;
+    }
+
+    public async Task RateConcertAsync(ConcertRatingDto concertRating)
+    {
+        Concert concert = await _concertRepository.GetByIdAsync(concertRating.ConcertId)
+            ?? throw new ItemNotFoundException(concertRating.ConcertId);
+
+        Rating? rating = (await _ratingRepository.GetFilteredAsync([
+            r => r.ConcertId == concertRating.ConcertId
+            && r.UserId == concertRating.UserId], null, null))
+            .FirstOrDefault();
+            
+
+        if (rating == null)
+        {
+
+            Rating newRating = new()
+            {
+                ConcertId = concertRating.ConcertId,
+                Stars = concertRating.Rating,
+                UserId = concertRating.UserId
+            };
+            await _ratingRepository.InsertAsync(newRating);
+        }
+        else
+        {
+            rating.Stars = concertRating.Rating;
+            _ratingRepository.Update(rating);
+        }
+
+        await _ratingRepository.SaveChangesAsync();
+        
+        concert.AverageRating = await GetAverageRatingAsync(concertRating.ConcertId);
+        _concertRepository.Update(concert);
+        await _concertRepository.SaveChangesAsync();
+    }
+
+    public async Task<float> GetAverageRatingAsync(int concertId)
+    {
+        float averageRating = (await _ratingRepository.GetFilteredAsync([r => r.ConcertId == concertId], null, null)).Average(r => r.Stars);
+        return averageRating;
     }
 }
