@@ -19,7 +19,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : EntityBase
         _dbSet = context.Set<T>();
     }
 
-    public async Task<List<T>> GetFilteredAsync(Expression<Func<T, bool>>[] filters, int? skip, int? take, params Expression<Func<T, bool>>[] includes)
+    public async Task<List<T>> GetFilteredAsync(Expression<Func<T, bool>>[] filters, int? skip, int? take, params Expression<Func<T, object>>[] includes)
     {
         IQueryable<T> query = _dbSet.AsQueryable<T>();
         
@@ -40,7 +40,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : EntityBase
 
     }
 
-    public async Task<List<T>> GetAsync(int? skip, int? take, params Expression<Func<T, bool>>[] includes)
+    public async Task<List<T>> GetAsync(int? skip, int? take, params Expression<Func<T, object>>[] includes)
     {
         IQueryable<T> query = _dbSet.AsQueryable<T>();
 
@@ -52,7 +52,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : EntityBase
         return await query.ToListAsync();
     }
 
-    public async Task<T> GetByIdAsync(int id, params Expression<Func<T, bool>>[] includes)
+    public async Task<T> GetByIdAsync(int id, params Expression<Func<T, object>>[] includes)
     {
         IQueryable<T> query = _dbSet.AsQueryable<T>();
 
