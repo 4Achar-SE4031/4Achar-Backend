@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Concertify.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Concertify.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250124121609_InitialMigration")]
+    partial class InitialMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -96,30 +99,6 @@ namespace Concertify.Infrastructure.Migrations
                         .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("AspNetUsers", (string)null);
-                });
-
-            modelBuilder.Entity("Concertify.Domain.Models.Bookmark", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ConcertId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("UserId")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ConcertId");
-
-                    b.HasIndex("UserId", "ConcertId")
-                        .IsUnique();
-
-                    b.ToTable("Bookmarks");
                 });
 
             modelBuilder.Entity("Concertify.Domain.Models.Comment", b =>
@@ -392,19 +371,6 @@ namespace Concertify.Infrastructure.Migrations
                     b.HasOne("Concertify.Domain.Models.Comment", null)
                         .WithMany("LikedBy")
                         .HasForeignKey("CommentId");
-                });
-
-            modelBuilder.Entity("Concertify.Domain.Models.Bookmark", b =>
-                {
-                    b.HasOne("Concertify.Domain.Models.Concert", null)
-                        .WithMany()
-                        .HasForeignKey("ConcertId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Concertify.Domain.Models.ApplicationUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId");
                 });
 
             modelBuilder.Entity("Concertify.Domain.Models.Comment", b =>

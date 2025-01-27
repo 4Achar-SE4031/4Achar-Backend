@@ -15,12 +15,18 @@ public class ScrapeController(IScraperService scraperService, IWebHostEnvironmen
     [HttpGet]
     [Route("collect")]
     [Produces(typeof(List<ConcertSummaryDto>))]
-    public async IAsyncEnumerable<ConcertSummaryDto> Collect()
+    public async Task<IActionResult> Collect()
     {
+        List<ConcertSummaryDto> concerts = new();
         await foreach (var concert in _scraperService.Collect())
         {
             concert.CardImage = $"{Request.Scheme}://{Request.Host}{concert.CardImage.Replace(_webHostEnvironment.WebRootPath, "")}";
-            yield return concert;
+            concerts.Add(concert);
         }
+
+        return Ok(new {
+            count = concerts.Count,
+            scrapedItems = concerts
+        });
     }
 }

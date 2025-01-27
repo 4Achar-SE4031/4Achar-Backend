@@ -6,12 +6,14 @@ using System.Security.Policy;
 using AutoMapper;
 
 using Concertify.Domain.Dtos.Account;
+using Concertify.Domain.Dtos.Concert;
 using Concertify.Domain.Exceptions;
 using Concertify.Domain.Interfaces;
 using Concertify.Domain.Models;
 
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace Concertify.Application.Services;
 
@@ -199,4 +201,16 @@ public class AccountService : IAccountService
             throw new Exception(result.Errors.First().Description);
     }
 
+
+    public async Task<List<ConcertSummaryDto>> GetBookmarkedConcertsAsync(string userId)
+    {
+        ApplicationUser user = await _userManager.Users.Include(u => u.BookmarkedConcerts).FirstOrDefaultAsync(u => u.Id == userId)
+            ?? throw new UserNotFoundException($"no user with the id {userId} exists.");
+
+        List<Concert> bookmarkedConcerts = user.BookmarkedConcerts;
+
+        List<ConcertSummaryDto> concertDtos = _mapper.Map<List<ConcertSummaryDto>>(bookmarkedConcerts);
+
+        return concertDtos;
+    }
 }

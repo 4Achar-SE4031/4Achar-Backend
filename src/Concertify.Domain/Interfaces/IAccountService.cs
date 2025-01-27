@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 
 using Concertify.Domain.Dtos.Account;
+using Concertify.Domain.Dtos.Concert;
 using Concertify.Domain.Models;
 
 
@@ -17,4 +18,5 @@ public interface IAccountService
     public Task ChangeUserPasswordAsync(ChangePasswordDto changePasswordDto, string userId);
     public Task<string> SendPasswordResetEmailAsync(PasswordResetEmailRequestDto passwordResetEmailRequestDto);
     public Task ResetPasswordAsync(UserPasswordResetDto passwordResetDto);
+    public Task<List<ConcertSummaryDto>> GetBookmarkedConcertsAsync(string userId);
 }

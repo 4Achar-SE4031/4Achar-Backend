@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Concertify.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250123180251_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250127102213_BookmarkModel")]
+    partial class BookmarkModel
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -101,6 +101,30 @@ namespace Concertify.Infrastructure.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("Concertify.Domain.Models.Bookmark", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ConcertId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConcertId");
+
+                    b.HasIndex("UserId", "ConcertId")
+                        .IsUnique();
+
+                    b.ToTable("Bookmarks");
+                });
+
             modelBuilder.Entity("Concertify.Domain.Models.Comment", b =>
                 {
                     b.Property<int>("Id")
@@ -152,6 +176,9 @@ namespace Concertify.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<float>("AverageRating")
+                        .HasColumnType("real");
+
                     b.Property<string>("CardImage")
                         .IsRequired()
                         .HasColumnType("text");
@@ -198,7 +225,37 @@ namespace Concertify.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Title", "StartDateTime", "City")
+                        .IsUnique();
+
                     b.ToTable("Concerts");
+                });
+
+            modelBuilder.Entity("Concertify.Domain.Models.Rating", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ConcertId")
+                        .HasColumnType("integer");
+
+                    b.Property<float>("Stars")
+                        .HasColumnType("real");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConcertId");
+
+                    b.HasIndex("UserId", "ConcertId")
+                        .IsUnique();
+
+                    b.ToTable("Ratings");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -340,6 +397,19 @@ namespace Concertify.Infrastructure.Migrations
                         .HasForeignKey("CommentId");
                 });
 
+            modelBuilder.Entity("Concertify.Domain.Models.Bookmark", b =>
+                {
+                    b.HasOne("Concertify.Domain.Models.Concert", null)
+                        .WithMany()
+                        .HasForeignKey("ConcertId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Concertify.Domain.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId");
+                });
+
             modelBuilder.Entity("Concertify.Domain.Models.Comment", b =>
                 {
                     b.HasOne("Concertify.Domain.Models.Concert", "Event")
@@ -363,6 +433,19 @@ namespace Concertify.Infrastructure.Migrations
                     b.Navigation("Parent");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Concertify.Domain.Models.Rating", b =>
+                {
+                    b.HasOne("Concertify.Domain.Models.Concert", null)
+                        .WithMany()
+                        .HasForeignKey("ConcertId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Concertify.Domain.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

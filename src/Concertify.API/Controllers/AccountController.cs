@@ -3,12 +3,13 @@ using System.Security.Claims;
 using System.Text;
 
 using Concertify.Domain.Dtos.Account;
+using Concertify.Domain.Dtos.Concert;
 using Concertify.Domain.Interfaces;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration.UserSecrets;
 using Microsoft.IdentityModel.Tokens;
     
 namespace Concertify.API.Controllers;
@@ -21,11 +22,13 @@ public class AccountController : ControllerBase
 
     private readonly IAccountService _accountService;
     private readonly IConfiguration _configuration;
+    private readonly IWebHostEnvironment _webHostEnvironment;
 
-    public AccountController(IAccountService accountService, IConfiguration configuration)
+    public AccountController(IAccountService accountService, IConfiguration configuration, IWebHostEnvironment webHostEnvironment)
     {
         _accountService = accountService;
         _configuration = configuration;
+        _webHostEnvironment = webHostEnvironment;
     }
 
     [HttpPost]
@@ -159,6 +162,25 @@ public class AccountController : ControllerBase
         return Ok(new
         {
             detail = "Your password was changed successfully."
+        });
+    }
+
+    [HttpGet]
+    [Route("bookmarked_concerts")]
+    [Produces(typeof(List<ConcertSummaryDto>))]
+    public async Task<IActionResult> GetBookmarkedConcertsAsync()
+    {
+        string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? throw new Exception("User Id cannot be null.");
+
+        List<ConcertSummaryDto> bookmarkedConcerts = await _accountService.GetBookmarkedConcertsAsync(userId);
+        bookmarkedConcerts.ForEach(c => c.CardImage = $"{Request.Scheme}://{Request.Host}{c.CardImage.Replace(_webHostEnvironment.WebRootPath, "")}");
+
+
+        return Ok(new
+        {
+            TotalCount = bookmarkedConcerts.Count,
+            Concerts = bookmarkedConcerts
         });
     }
 }

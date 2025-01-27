@@ -1,6 +1,10 @@
-﻿using Concertify.Domain.Dtos.Concert;
+﻿using System.Security.Claims;
+
+using Concertify.Domain.Dtos.Concert;
 using Concertify.Domain.Interfaces;
 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Concertify.API.Controllers;
@@ -27,7 +31,10 @@ public class ConcertController(IConcertService concertService, IWebHostEnvironme
     [Produces(typeof(ConcertDetailsDto))]
     public async Task<IActionResult> GetConcertByIdAsync(int id)
     {
-        ConcertDetailsDto concert = await _concertService.GetConcertByIdAsync(id);
+        string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? null;
+
+        ConcertDetailsDto concert = await _concertService.GetConcertByIdAsync(id, userId);
         concert.CoverImage = $"{Request.Scheme}://{Request.Host}{concert.CoverImage.Replace(_webHostEnvironment.WebRootPath, "")}";
 
         return Ok(concert);
@@ -42,5 +49,44 @@ public class ConcertController(IConcertService concertService, IWebHostEnvironme
         concerts.ForEach(c => c.CardImage = $"{Request.Scheme}://{Request.Host}{c.CardImage.Replace(_webHostEnvironment.WebRootPath, "")}");
 
         return Ok(concerts);
+    }
+
+    [HttpPost]
+    [Route("{id}/rate")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> RateConcertAsync(float stars, int id)
+    {
+        string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? throw new Exception("User Id cannot be null.");
+
+        ConcertRatingDto concertRating = new()
+        {
+            UserId = userId,
+            ConcertId = id,
+            Rating = stars
+        };
+        await _concertService.RateConcertAsync(concertRating);
+        return Ok();
+    }
+
+    [HttpGet]
+    [Route("{id}/average_rating")]
+    [Produces(typeof(double))]
+    public async Task<IActionResult> GetAverageRatingAsync(int id)
+    {
+        float averageRating = await _concertService.GetAverageRatingAsync(id);
+        return Ok(new {AverageRating = averageRating});
+    }
+
+    [HttpPost]
+    [Route("{id}/bookmark")]
+    [Authorize]
+    public async Task<IActionResult> ToggleBookmarkAsync(int id)
+    {
+        string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? throw new Exception("User Id cannot be null.");
+
+        await _concertService.ToggleBookmarkAsync(id, userId);
+        return Ok();
     }
 }
