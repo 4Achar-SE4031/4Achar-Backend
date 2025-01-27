@@ -26,7 +26,7 @@ public class ConcertService(
     public async Task<ConcertDetailsDto> GetConcertByIdAsync(int concertId, string? userId)
     {
         
-        Concert entity = await _concertRepository.GetByIdAsync(concertId, c => c.Ratings)
+        Concert entity = await _concertRepository.GetByIdAsync(concertId, c => c.Ratings, c => c.Bookmarks)
             ?? throw new ItemNotFoundException(concertId);
 
 
@@ -35,6 +35,11 @@ public class ConcertService(
         {
             concert.UserRating = (await _ratingRepository.GetFilteredAsync([r => r.UserId == userId, r => r.ConcertId == concertId], null, null)).First().Stars;
 
+        }
+        
+        if (userId != null)
+        {
+            concert.IsBookmarked = entity.Bookmarks.Any(b => b.Id == userId);
         }
         return concert;
 
