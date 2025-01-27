@@ -16,6 +16,7 @@ public class ConcertServiceTests
 {
     private readonly Mock<IGenericRepository<Concert>> _concertRepositoryMock;
     private readonly Mock<IGenericRepository<Rating>> _ratingRepositoryMock;
+    private readonly Mock<IGenericRepository<Bookmark>> _bookmarkRepositoryMock;
     private readonly Mock<IMapper> _mapperMock;
     private readonly ConcertService _concertService;
 
@@ -23,8 +24,14 @@ public class ConcertServiceTests
     {
         _concertRepositoryMock = new Mock<IGenericRepository<Concert>>();
         _ratingRepositoryMock = new Mock<IGenericRepository<Rating>>();
+        _bookmarkRepositoryMock = new Mock<IGenericRepository<Bookmark>>();
         _mapperMock = new Mock<IMapper>();
-        _concertService = new ConcertService(_concertRepositoryMock.Object, _ratingRepositoryMock.Object, _mapperMock.Object);
+        _concertService = new ConcertService(
+            _concertRepositoryMock.Object, 
+            _ratingRepositoryMock.Object, 
+            _bookmarkRepositoryMock.Object, 
+            _mapperMock.Object
+            );
     }
 
     [Fact]
