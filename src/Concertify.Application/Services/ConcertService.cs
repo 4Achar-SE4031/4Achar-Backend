@@ -11,10 +11,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Concertify.Application.Services;
 
-public class ConcertService(IGenericRepository<Concert> concertRepository, IGenericRepository<Rating> ratingRepository, IMapper mapper) : IConcertService
+public class ConcertService(
+    IGenericRepository<Concert> concertRepository, 
+    IGenericRepository<Rating> ratingRepository, 
+    IGenericRepository<Bookmark> bookmarkRepository, 
+    IMapper mapper
+    ) : IConcertService
 {
     private readonly IGenericRepository<Concert> _concertRepository = concertRepository;
     private readonly IGenericRepository<Rating> _ratingRepository = ratingRepository;
+    private readonly IGenericRepository<Bookmark> _bookmarkRepository = bookmarkRepository;
     private readonly IMapper _mapper = mapper;
 
     public async Task<ConcertDetailsDto> GetConcertByIdAsync(int concertId, string? userId)
@@ -113,6 +119,33 @@ public class ConcertService(IGenericRepository<Concert> concertRepository, IGene
         concert.AverageRating = await GetAverageRatingAsync(concertRating.ConcertId);
         _concertRepository.Update(concert);
         await _concertRepository.SaveChangesAsync();
+    }
+
+    public async Task ToggleBookmarkAsync(int concertId, string? userId)
+    {
+        Concert concert = await _concertRepository.GetByIdAsync(concertId)
+            ?? throw new ItemNotFoundException(concertId);
+
+        Bookmark? bookmark = (await _bookmarkRepository.GetFilteredAsync([
+            b => b.ConcertId == concertId
+            && b.UserId == userId], null, null))
+            .FirstOrDefault();
+
+        if (bookmark == null)
+        {
+            Bookmark newBookmark = new()
+            {
+                ConcertId = concertId,
+                UserId = userId
+            };
+            await _bookmarkRepository.InsertAsync(newBookmark);
+        }
+        else
+        {
+            _bookmarkRepository.Delete(bookmark);
+        }
+
+        await _bookmarkRepository.SaveChangesAsync();
     }
 
     public async Task<float> GetAverageRatingAsync(int concertId)
