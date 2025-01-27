@@ -17,4 +17,5 @@ public record ConcertDetailsDto
     public string Url { get; set; } = default!;
     public float AverageRating { get; set; } = default!;
     public float? UserRating { get; set; }
+    public bool IsBookmarked { get; set; }
 }
