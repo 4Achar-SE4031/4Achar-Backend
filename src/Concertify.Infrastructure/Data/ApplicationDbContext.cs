@@ -14,6 +14,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Concert> Concerts { get; set; }
     public DbSet<Rating> Ratings { get; set; }
     public DbSet<Comment> Comments { get; set; }
+    public DbSet<Bookmark> Bookmarks { get; set; }
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {
@@ -35,6 +36,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<Rating>()
             .HasIndex(r => new {r.UserId, r.ConcertId })
             .IsUnique();
+        builder.Entity<Bookmark>()
+            .HasIndex(b => new { b.UserId, b.ConcertId })
+            .IsUnique();
 
         builder.Entity<Concert>()
             .HasIndex(c => new
@@ -51,6 +55,13 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 l => l.HasOne<ApplicationUser>().WithMany().HasForeignKey(e => e.UserId),
                 r => r.HasOne<Concert>().WithMany().HasForeignKey(e => e.ConcertId));
         
+        builder.Entity<ApplicationUser>()
+            .HasMany(e => e.BookmarkedConcerts)
+            .WithMany(c => c.Bookmarks)
+            .UsingEntity<Bookmark>(
+                l => l.HasOne<Concert>().WithMany().HasForeignKey(e => e.ConcertId),
+                r => r.HasOne<ApplicationUser>().WithMany().HasForeignKey(e => e.UserId));
+
         builder.Entity<Concert>()
             .Property(c => c.StartDateTime)
             .HasConversion(
