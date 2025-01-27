@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 
 using Concertify.Domain.Dtos.Account;
+using Concertify.Domain.Dtos.Concert;
 using Concertify.Domain.Interfaces;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -158,6 +159,23 @@ public class AccountController : ControllerBase
         return Ok(new
         {
             detail = "Your password was changed successfully."
+        });
+    }
+
+    [HttpGet]
+    [Route("bookmarked_concerts")]
+    [Produces(typeof(List<ConcertSummaryDto>))]
+    public async Task<IActionResult> GetBookmarkedConcertsAsync()
+    {
+        string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? throw new Exception("User Id cannot be null.");
+
+        List<ConcertSummaryDto> bookmarkedConcerts = await _accountService.GetBookmarkedConcertsAsync(userId);
+
+        return Ok(new
+        {
+            TotalCount = bookmarkedConcerts.Count,
+            Concerts = bookmarkedConcerts
         });
     }
 }

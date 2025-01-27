@@ -77,4 +77,16 @@ public class ConcertController(IConcertService concertService, IWebHostEnvironme
         float averageRating = await _concertService.GetAverageRatingAsync(id);
         return Ok(new {AverageRating = averageRating});
     }
+
+    [HttpPost]
+    [Route("{id}/bookmark")]
+    [Authorize]
+    public async Task<IActionResult> ToggleBookmarkAsync(int id)
+    {
+        string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? throw new Exception("User Id cannot be null.");
+
+        await _concertService.ToggleBookmarkAsync(id, userId);
+        return Ok();
+    }
 }

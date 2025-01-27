@@ -17,5 +17,6 @@ public class Concert : EntityBase
     public string Url { get; set; } = default!; 
     public ICollection<Comment> Comments { get; set; } = new List<Comment>();
     public List<ApplicationUser> Ratings { get; set; } = [];
+    public List<ApplicationUser> Bookmarks { get; set; } = [];
     public float AverageRating { get; set; } = default!;
 }

@@ -22,6 +22,7 @@ public class DependencyInjectionConfiguration
         services.AddScoped<IConcertService, ConcertService>();
         services.AddScoped<IGenericRepository<Concert>, GenericRepository<Concert>>();
         services.AddScoped<IGenericRepository<Rating>, GenericRepository<Rating>>();
+        services.AddScoped<IGenericRepository<Bookmark>, GenericRepository<Bookmark>>();
 
         services.AddScoped<IScraperService, ScraperService>();
         services.AddScoped<IWebScraper, HonarTicketScraper>();
