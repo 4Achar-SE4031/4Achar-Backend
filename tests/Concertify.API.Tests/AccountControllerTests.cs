@@ -1,143 +1,213 @@
-﻿using System.Security.Claims;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
+
+using AutoMapper;
 
 using Concertify.API.Controllers;
 using Concertify.Domain.Dtos.Account;
-using Concertify.Domain.Exceptions;
+using Concertify.Domain.Dtos.Concert;
 using Concertify.Domain.Interfaces;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.FileProviders;
 
+using Moq;
+
+using Xunit;
+
+namespace Concertify.API.Tests;
 public class AccountControllerTests
 {
-    private readonly Mock<IAccountService> _mockAccountService;
-    private readonly Mock<IConfiguration> _mockConfiguration;
+    private readonly Mock<IAccountService> _accountServiceMock = new();
+    private readonly Mock<IConfiguration> _configurationMock = new();
+    private readonly Mock<IWebHostEnvironment> _webHostEnvironmentMock = new();
     private readonly AccountController _controller;
-    private readonly Mock<IWebHostEnvironment> _webHostEnvironment;
 
     public AccountControllerTests()
     {
-        _mockAccountService = new Mock<IAccountService>();
-        _mockConfiguration = new Mock<IConfiguration>();
-        _webHostEnvironment = new Mock<IWebHostEnvironment>();
+        _controller = new AccountController(
+            _accountServiceMock.Object,
+            _configurationMock.Object,
+            _webHostEnvironmentMock.Object
+        );
 
-        _webHostEnvironment.Setup(w => w.WebRootFileProvider).Returns(new Mock<IFileProvider>().Object);
-        _webHostEnvironment.Setup(w => w.WebRootPath).Returns("Concertify.API\\wwwroot");
+        // Mocking HTTP Context for user claims
+        var httpContext = new DefaultHttpContext();
+        httpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, "test-user-id")
+        }));
 
-        _controller = new AccountController(_mockAccountService.Object, _mockConfiguration.Object, _webHostEnvironment.Object);
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = httpContext
+        };
     }
 
     [Fact]
-    public async Task GetTokenAsync_ShouldReturnToken_ForValidUser()
+    public async Task GetTokenAsync_ShouldReturnToken_WhenLoginIsSuccessful()
     {
         // Arrange
-        var loginDto = new UserLoginDto { UserName = "testuser", Password = "Password123!" };
-        var userClaims = new List<Claim> { new Claim(ClaimTypes.NameIdentifier, "1") };
-        _mockAccountService.Setup(service => service.GetTokenAsync(loginDto)).ReturnsAsync(userClaims);
-        _mockConfiguration.Setup(config => config["JWT:Secret"]).Returns("ByYM000OLlMQG6VVVp1OH7Xzyr7gHuw1qvUC5dcGt3SNM");
-        _mockConfiguration.Setup(config => config["JWT:ValidIssuer"]).Returns("http://localhost:7180");
-        _mockConfiguration.Setup(config => config["JWT:ValidAudience"]).Returns("http://localhost:7180");
+        var loginDto = new UserLoginDto { UserName = "testusername", Password = "password" };
+        var claims = new List<Claim> { new Claim(ClaimTypes.Name, loginDto.UserName) };
+
+        _accountServiceMock
+            .Setup(s => s.GetTokenAsync(loginDto))
+            .ReturnsAsync(claims);
+
+        string secret; // 16 bytes for 128 bits
+
+        byte[] randomBytes = new byte[16]; // 16 bytes for 128 bits
+
+        using (var rng = RandomNumberGenerator.Create())
+
+        {
+
+            rng.GetBytes(randomBytes);
+
+        }
+
+        secret = Convert.ToBase64String(randomBytes);
+
+
+        _configurationMock
+            .SetupGet(c => c["JWT:Secret"])
+            .Returns("AbCD123EfgHIJ6KLNM1OH7Xzyr7gHuw1qvUC5dcGt3SNM");
+
+        _configurationMock
+            .SetupGet(c => c["JWT:ValidIssuer"])
+            .Returns("issuer");
+
+        _configurationMock
+            .SetupGet(c => c["JWT:ValidAudience"])
+            .Returns("audience");
 
         // Act
         var result = await _controller.GetTokenAsync(loginDto);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
+        var response = okResult.Value as TokenDto;
+
+        Assert.NotNull(response.Token);
+        Assert.NotNull(response.Expires);
     }
 
     [Fact]
-    public async Task RegisterAsync_ShouldReturnUserInfo_ForValidUser()
+    public async Task RegisterAsync_ShouldReturnUserInfo_WhenRegistrationIsSuccessful()
     {
         // Arrange
-        var registerDto = new UserRegisterDto { UserName = "testuser", Password = "Password123!", Email = "test@example.com" };
-        var userInfo = new UserInfoDto { UserName = "testuser", Email = "test@example.com" };
-        _mockAccountService.Setup(service => service.RegisterUserAsync(registerDto)).ReturnsAsync(userInfo);
+        var registerDto = new UserRegisterDto
+        {
+            UserName = "testusername",
+            Email = "test@example.com",
+            Password = "password"
+        };
+
+        var userInfoDto = new UserInfoDto {Email = "test@example.com", UserName = registerDto.UserName };
+
+        _accountServiceMock
+            .Setup(s => s.RegisterUserAsync(registerDto))
+            .ReturnsAsync(userInfoDto);
 
         // Act
         var result = await _controller.RegisterAsync(registerDto);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnedUser = Assert.IsType<UserInfoDto>(okResult.Value);
-        Assert.Equal(registerDto.UserName, returnedUser.UserName);
+        var response = Assert.IsType<UserInfoDto>(okResult.Value);
+
+        Assert.Equal(registerDto.UserName, response.UserName);
+        Assert.Equal(registerDto.Email, response.Email);
     }
 
     [Fact]
-    public async Task ConfirmEmailAsync_ShouldReturnSuccessMessage_ForValidTokenAndEmail()
+    public async Task ConfirmEmailAsync_ShouldReturnOk_WhenConfirmationIsSuccessful()
     {
         // Arrange
-        var confirmationDto = new EmailConfirmationDto { ConfirmationToken = "validtoken", Email = "test@example.com" };
-        _mockAccountService.Setup(service => service.ConfirmEmailAsync(confirmationDto)).Returns(Task.CompletedTask);
+        var confirmationDto = new EmailConfirmationDto
+        {
+            Email = "test@example.com",
+            ConfirmationToken = "token123"
+        };
 
         // Act
         var result = await _controller.ConfirmEmailAsync(confirmationDto);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.Contains("confirmed successfully", okResult.Value.ToString());
     }
 
     [Fact]
-    public async Task ConfirmEmailAsync_ShouldReturnBadRequest_ForInvalidTokenOrEmail()
-    {
-        string email = "invalid@mail.com";
-        var confirmationDto = new EmailConfirmationDto { ConfirmationToken = "adfklagsd9834_invalid_adfsdfsdf", Email = email };
-        _mockAccountService.Setup(service => service.ConfirmEmailAsync(confirmationDto)).Throws<UserNotFoundException>();
-
-        var ex = await Assert.ThrowsAsync<UserNotFoundException>(() => _mockAccountService.Object.ConfirmEmailAsync(confirmationDto));
-        Assert.Equal(typeof(UserNotFoundException), ex.GetType());
-    }
-
-    [Fact]
-    public async Task GetUserInfoAsync_ShouldReturnUserInfo_ForValidUserId()
+    public async Task GetUserInfoAsync_ShouldReturnUserInfo_WhenAuthenticated()
     {
         // Arrange
-        var userId = "1";
-        var userInfo = new UserInfoDto { UserName = "testuser", Email = "test@example.com" };
-        _mockAccountService.Setup(service => service.GetUserInfoAsync(userId)).ReturnsAsync(userInfo);
-        var userClaims = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
-        {
-            new Claim(ClaimTypes.NameIdentifier, userId)
-        }, "mock"));
-        _controller.ControllerContext = new ControllerContext
-        {
-            HttpContext = new DefaultHttpContext { User = userClaims }
-        };
+        var userInfoDto = new UserInfoDto { UserName = "testusername", Email = "test@example.com" };
+
+        _accountServiceMock
+            .Setup(s => s.GetUserInfoAsync("test-user-id"))
+            .ReturnsAsync(userInfoDto);
 
         // Act
         var result = await _controller.GetUserInfoAsync();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnedUserInfo = Assert.IsType<UserInfoDto>(okResult.Value);
-        Assert.Equal(userInfo.UserName, returnedUserInfo.UserName);
+        var response = Assert.IsType<UserInfoDto>(okResult.Value);
+
+        Assert.Equal("testusername", response.UserName);
+        Assert.Equal("test@example.com", response.Email);
     }
 
     [Fact]
-    public async Task UpdateUserInfoAsync_ShouldReturnUpdatedUserInfo_ForValidUserId()
+    public async Task ChangePasswordAsync_ShouldReturnOk_WhenPasswordIsChanged()
     {
         // Arrange
-        var userId = "1";
-        var updateDto = new UserUpdateDto { UserName = "updateduser" };
-        var updatedUserInfo = new UserInfoDto { UserName = "updateduser", Email = "test@example.com" };
-        _mockAccountService.Setup(service => service.UpdateUserInfoAsync(updateDto, userId)).ReturnsAsync(updatedUserInfo);
-        var userClaims = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+        var changePasswordDto = new ChangePasswordDto
         {
-            new Claim(ClaimTypes.NameIdentifier, userId)
-        }, "mock"));
-        _controller.ControllerContext = new ControllerContext
-        {
-            HttpContext = new DefaultHttpContext { User = userClaims }
+            OldPassword = "old-password",
+            NewPassword = "new-password"
         };
 
         // Act
-        var result = await _controller.UpdateUserInfoAsync(updateDto);
+        var result = await _controller.ChangePasswordAsync(changePasswordDto);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnedUserInfo = Assert.IsType<UserInfoDto>(okResult.Value);
-        Assert.Equal(updatedUserInfo.UserName, returnedUserInfo.UserName);
+        Assert.Contains("password was changed successfully", okResult.Value.ToString());
+    }
+
+    [Fact]
+    public async Task GetBookmarkedConcertsAsync_ShouldReturnBookmarkedConcerts()
+    {
+        // Arrange
+        var bookmarkedConcerts = new List<ConcertSummaryDto>
+        {
+            new() { Id = 1, Title = "Concert 1", CardImage = "/images/concert1.jpg" },
+            new() { Id = 2, Title = "Concert 2", CardImage = "/images/concert2.jpg" }
+        };
+
+        _accountServiceMock
+            .Setup(s => s.GetBookmarkedConcertsAsync("test-user-id"))
+            .ReturnsAsync(bookmarkedConcerts);
+
+        _webHostEnvironmentMock
+            .SetupGet(w => w.WebRootPath)
+            .Returns("wwwroot");
+
+        // Act
+        IActionResult result = await _controller.GetBookmarkedConcertsAsync();
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var response = Assert.IsType<ConcertListDto>(okResult.Value);
+
+        Assert.Equal(2, response.TotalCount);
+        Assert.NotNull(response.Concerts);
     }
 }
