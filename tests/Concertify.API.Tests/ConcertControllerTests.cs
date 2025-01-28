@@ -32,9 +32,9 @@ public class ConcertControllerTests
 
         var userClaims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, "123"), 
-            new Claim(ClaimTypes.Name, "TestUser"),      
-            new Claim(ClaimTypes.Email, "test@example.com") 
+            new Claim(ClaimTypes.NameIdentifier, "123"),
+            new Claim(ClaimTypes.Name, "TestUser"),
+            new Claim(ClaimTypes.Email, "test@example.com")
         };
         var identity = new ClaimsIdentity(userClaims, "TestAuth");
         var user = new ClaimsPrincipal(identity);
