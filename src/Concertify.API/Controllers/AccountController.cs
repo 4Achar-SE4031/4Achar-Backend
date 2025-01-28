@@ -48,12 +48,12 @@ public class AccountController : ControllerBase
             );
 
         string jwtToken = new JwtSecurityTokenHandler().WriteToken(token);
-
-        return Ok(new
+        TokenDto tokenDto = new TokenDto
         {
-            token = jwtToken,
-            expires = token.ValidTo
-        });
+            Token = jwtToken,
+            Expires = token.ValidTo
+        };
+        return Ok(tokenDto);
     }
 
     [HttpPost]
@@ -176,11 +176,12 @@ public class AccountController : ControllerBase
         List<ConcertSummaryDto> bookmarkedConcerts = await _accountService.GetBookmarkedConcertsAsync(userId);
         bookmarkedConcerts.ForEach(c => c.CardImage = $"{Request.Scheme}://{Request.Host}{c.CardImage.Replace(_webHostEnvironment.WebRootPath, "")}");
 
-
-        return Ok(new
+        ConcertListDto concertList = new()
         {
             TotalCount = bookmarkedConcerts.Count,
             Concerts = bookmarkedConcerts
-        });
+        };
+
+        return Ok(concertList);
     }
 }

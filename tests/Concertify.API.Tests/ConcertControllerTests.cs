@@ -32,9 +32,9 @@ public class ConcertControllerTests
 
         var userClaims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, "123"), 
-            new Claim(ClaimTypes.Name, "TestUser"),      
-            new Claim(ClaimTypes.Email, "test@example.com") 
+            new Claim(ClaimTypes.NameIdentifier, "123"),
+            new Claim(ClaimTypes.Name, "TestUser"),
+            new Claim(ClaimTypes.Email, "test@example.com")
         };
         var identity = new ClaimsIdentity(userClaims, "TestAuth");
         var user = new ClaimsPrincipal(identity);
@@ -185,6 +185,88 @@ public class ConcertControllerTests
         var okResult = Assert.IsType<OkObjectResult>(result);
         var returnedConcerts = Assert.IsType<List<ConcertSummaryDto>>(okResult.Value);
     }
+
+    [Fact]
+    public async Task RateConcertAsync_ShouldRateConcert_WhenValidRequest()
+    {
+        // Arrange
+        var concertId = 1;
+        var stars = 5.0f;
+        var userId = "user1";
+
+        var httpContext = new DefaultHttpContext();
+        httpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) }));
+
+        var controller = new ConcertController(_mockConcertService.Object, _webHostEnvironment.Object)
+        {
+            ControllerContext = new ControllerContext { HttpContext = httpContext }
+        };
+
+        _mockConcertService
+            .Setup(service => service.RateConcertAsync(It.IsAny<ConcertRatingDto>()))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await controller.RateConcertAsync(stars, concertId);
+
+        // Assert
+        var okResult = Assert.IsType<OkResult>(result);
+        _mockConcertService.Verify(service => service.RateConcertAsync(It.Is<ConcertRatingDto>(dto =>
+            dto.ConcertId == concertId && dto.Rating == stars && dto.UserId == userId)), Times.Once);
+    }
+
+    [Fact]
+    public async Task RateConcertAsync_ShouldThrowException_WhenUserNotAuthenticated()
+    {
+        // Arrange
+        var concertId = 1;
+        var stars = 4.0f;
+
+        var controller = new ConcertController(_mockConcertService.Object, _webHostEnvironment.Object);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(() => controller.RateConcertAsync(stars, concertId));
+    }
+
+    [Fact]
+    public async Task ToggleBookmarkAsync_ShouldToggleBookmark_WhenValidRequest()
+    {
+        // Arrange
+        var concertId = 1;
+        var userId = "user1";
+
+        var httpContext = new DefaultHttpContext();
+        httpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) }));
+
+        var controller = new ConcertController(_mockConcertService.Object, _webHostEnvironment.Object)
+        {
+            ControllerContext = new ControllerContext { HttpContext = httpContext }
+        };
+
+        _mockConcertService
+            .Setup(service => service.ToggleBookmarkAsync(concertId, userId))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await controller.ToggleBookmarkAsync(concertId);
+
+        // Assert
+        var okResult = Assert.IsType<OkResult>(result);
+        _mockConcertService.Verify(service => service.ToggleBookmarkAsync(concertId, userId), Times.Once);
+    }
+
+    [Fact]
+    public async Task ToggleBookmarkAsync_ShouldThrowException_WhenUserNotAuthenticated()
+    {
+        // Arrange
+        var concertId = 1;
+
+        var controller = new ConcertController(_mockConcertService.Object, _webHostEnvironment.Object);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(() => controller.ToggleBookmarkAsync(concertId));
+    }
+
 
 
 }

@@ -1,4 +1,3 @@
-// File: Concertify.API/Controllers/CommentsController.cs
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -27,7 +26,7 @@ namespace Concertify.API.Controllers
         [HttpGet("event/{eventId}")]
         public async Task<IActionResult> GetCommentsForEvent(int eventId)
         {
-            string currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+            string currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
 
             var comments = await _commentService.GetCommentsForEventAsync(eventId, currentUserId);
 
@@ -45,13 +44,9 @@ namespace Concertify.API.Controllers
             if (string.IsNullOrWhiteSpace(dto.Text))
                 return BadRequest("Comment text cannot be empty.");
 
-            // Debugging: Log authentication status
-            Console.WriteLine($"IsAuthenticated: {User.Identity.IsAuthenticated}");
-            Console.WriteLine($"UserId: {User.FindFirstValue(ClaimTypes.NameIdentifier)}");
-
             string currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(currentUserId))
-                return Unauthorized("No valid user logged in.");
+                return new UnauthorizedObjectResult("No valid user logged in.");
 
             try
             {
@@ -78,7 +73,7 @@ namespace Concertify.API.Controllers
         {
             string currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(currentUserId))
-                return Unauthorized("No valid user logged in.");
+                return new UnauthorizedObjectResult("No valid user logged in.");
 
             try
             {
@@ -113,7 +108,7 @@ namespace Concertify.API.Controllers
 
             string currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(currentUserId))
-                return Unauthorized("No valid user logged in.");
+                return new UnauthorizedObjectResult("No valid user logged in.");
 
             try
             {
@@ -145,7 +140,7 @@ namespace Concertify.API.Controllers
         {
             string currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(currentUserId))
-                return Unauthorized("No valid user logged in.");
+                return new UnauthorizedObjectResult("No valid user logged in.");
 
             try
             {

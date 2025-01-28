@@ -23,10 +23,11 @@ public class ScrapeController(IScraperService scraperService, IWebHostEnvironmen
             concert.CardImage = $"{Request.Scheme}://{Request.Host}{concert.CardImage.Replace(_webHostEnvironment.WebRootPath, "")}";
             concerts.Add(concert);
         }
-
-        return Ok(new {
-            count = concerts.Count,
-            scrapedItems = concerts
-        });
+        ConcertListDto concertList = new()
+        {
+            TotalCount = concerts.Count,
+            Concerts = concerts
+        };
+        return Ok(concertList);
     }
 }

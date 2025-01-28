@@ -69,15 +69,6 @@ public class ConcertController(IConcertService concertService, IWebHostEnvironme
         return Ok();
     }
 
-    [HttpGet]
-    [Route("{id}/average_rating")]
-    [Produces(typeof(double))]
-    public async Task<IActionResult> GetAverageRatingAsync(int id)
-    {
-        float averageRating = await _concertService.GetAverageRatingAsync(id);
-        return Ok(new {AverageRating = averageRating});
-    }
-
     [HttpPost]
     [Route("{id}/bookmark")]
     [Authorize]
