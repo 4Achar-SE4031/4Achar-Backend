@@ -18,7 +18,6 @@ public class ScraperService(IScraperManager scraperManager, IMapper mapper) : IS
         Console.OutputEncoding = Encoding.UTF8;
         string url = "https://www.honarticket.com";
 
-        //List<ConcertSummaryDto> concerts = [];
         await foreach (var concert in _scraperManager.StartScraping(url))
         {
             yield return _mapper.Map<ConcertSummaryDto>(concert);
