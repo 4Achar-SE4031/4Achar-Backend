@@ -5,21 +5,29 @@ using Concertify.Domain.Dtos.Account;
 using Concertify.Domain.Exceptions;
 using Concertify.Domain.Interfaces;
 
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.FileProviders;
 
 public class AccountControllerTests
 {
     private readonly Mock<IAccountService> _mockAccountService;
     private readonly Mock<IConfiguration> _mockConfiguration;
     private readonly AccountController _controller;
+    private readonly Mock<IWebHostEnvironment> _webHostEnvironment;
 
     public AccountControllerTests()
     {
         _mockAccountService = new Mock<IAccountService>();
         _mockConfiguration = new Mock<IConfiguration>();
-        _controller = new AccountController(_mockAccountService.Object, _mockConfiguration.Object);
+        _webHostEnvironment = new Mock<IWebHostEnvironment>();
+
+        _webHostEnvironment.Setup(w => w.WebRootFileProvider).Returns(new Mock<IFileProvider>().Object);
+        _webHostEnvironment.Setup(w => w.WebRootPath).Returns("Concertify.API\\wwwroot");
+
+        _controller = new AccountController(_mockAccountService.Object, _mockConfiguration.Object, _webHostEnvironment.Object);
     }
 
     [Fact]
