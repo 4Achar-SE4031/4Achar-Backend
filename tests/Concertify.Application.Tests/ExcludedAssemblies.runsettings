@@ -37,8 +37,7 @@
 			<DataCollector friendlyName="XPlat Code Coverage">
 				<Configuration>
 					<Exclude>
-						<ModulePath>.*Concertify.Infrastructure.*</ModulePath>
-						<!--<ModulePath>.*AnotherAssemblyToExclude.*</ModulePath>-->
+						<ModulePath>[*]Concertify.Infrastructure*</ModulePath>
 					</Exclude>
 				</Configuration>
 			</DataCollector>
@@ -87,7 +86,7 @@
 
 	<ModulePaths>
 		<Exclude>
-			<ModulePath>*Concetify.Infrastructure.dll</ModulePath>
+			<ModulePath>[*]Concertify.Infrastructure*</ModulePath>
 			<!-- Add more ModulePath nodes here. -->
 		</Exclude>
 	</ModulePaths>
